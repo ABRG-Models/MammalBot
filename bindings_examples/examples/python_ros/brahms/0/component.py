@@ -6,6 +6,15 @@
 import brahms
 import numpy
 
+import sys
+# Needed for importing rospy in embedded scenario
+if not hasattr(sys, 'argv'):
+    sys.argv  = ['']
+
+import rospy
+from std_msgs.msg import Float64
+
+
 # event function
 def brahms_process(persist, input):
 
@@ -24,8 +33,8 @@ def brahms_process(persist, input):
 		
 		# ok
 		output['event']['response'] = C_OK
+	
 
-			
 	# switch on event type
 	elif input['event']['type'] == EVENT_STATE_SET:
 
@@ -39,15 +48,16 @@ def brahms_process(persist, input):
 		# on first call
 		if input['event']['flags'] & F_FIRST_CALL:
 
-			# Access input port 'python_in'
-			index = input['iif']['default']['index']['python_in']
+			# Access input port 'python_ros_in'
+			index = input['iif']['default']['index']['python_ros_in']
 			port = input['iif']['default']['ports'][index]
 			
-			# Store data			
-			persist['python_in'] = port['data']
+			# Initialise ROS nodes
+			persist['ros_pub'] = rospy.Publisher("/example/python", Float64, queue_size=0)
+			rospy.init_node('output', anonymous=True)
 
-			# Create output port with label 'python_out'
-			persist['hOutputPort'] = brahms.operation(persist['self'], OPERATION_ADD_PORT, '', 'std/2009/data/numeric', 'DOUBLE/REAL/1', 'python_out')
+			# Store data
+			persist['python_ros_in'] = port['data']
 
 			# do nothing
 			pass
@@ -66,15 +76,10 @@ def brahms_process(persist, input):
 	elif input['event']['type'] == EVENT_RUN_SERVICE:
 
 		# Move input data to local variable	
-		input_value = persist['python_in']
+		ros_data = persist['python_ros_in']
 
-		# Set output value to input * 2
-		brahms.operation(
-			persist['self'],
-			OPERATION_SET_CONTENT,
-			persist['hOutputPort'],
-			numpy.array([input_value * 2], numpy.float64)
-		)
+		# Publish data to ROS node
+		persist['ros_pub'].publish(ros_data)
 
 		# ok
 		output['event']['response'] = C_OK
