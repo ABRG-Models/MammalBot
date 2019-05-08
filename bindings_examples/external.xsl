@@ -4,7 +4,7 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 <xsl:output method="xml" omit-xml-declaration="no" version="1.0" encoding="UTF-8" indent="yes"/>
 
 <!--
-     This is a very brief example of how to link a SpineML model to a Python component and pass data between them
+     This is a very brief example of how to link a SpineML model to a external components and pass data between them
 -->
 
 <xsl:param name="spineml_output_dir" select="'./'"/>
@@ -20,10 +20,10 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 <!-- GET THE SAMPLE RATE -->
 <xsl:variable name="sampleRate" select="(1 div number($expt_root//@dt)) * 1000.0"/>
 
-<!-- This is the destination process -->
+<!-- These are the external processes -->
 <Process>
 	<Name>Python_example</Name>
-	<Class>dev/python/example</Class>
+	<Class>examples/python</Class>
 	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
 		<m><xsl:value-of select="$spineml_output_dir"/></m>
 		<m>ExplicitEuler</m>
@@ -31,9 +31,9 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 	<Time><SampleRate><xsl:value-of select="$sampleRate"/></SampleRate></Time>
 </Process>
 
-<!-- Here, we link each muscle input activity process to the Saccade simulator. -->
+<!-- These are the links between external and SpineML processes (or between external processes) -->
 <Link>
-	<Src>Neuron&gt;neuron_out</Src>
+	<Src>SC_Neuron_1&gt;neuron_out</Src>
 	<Dst>Python_example&lt;&lt;&lt;python_in</Dst>
 	<Lag>0</Lag>
 </Link>
@@ -41,17 +41,9 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 
 <Link>
 	<Src>Python_example&gt;python_out</Src>
-	<Dst>Neuron&lt;&lt;&lt;neuron_in</Dst>
-	<Lag>1</Lag>
+	<Dst>SC_Neuron_2&lt;&lt;&lt;neuron_in</Dst>
+	<Lag>0</Lag>
 </Link>
-
-<!--
-<Link>
-	<Src>Python_example&gt;python_out</Src>
-	<Dst>Neuron&lt;&lt;&lt;neuron_in</Dst>
-	<Lag>1</Lag>
-</Link>
--->
 
 
 <!-- END TEMPLATE -->
