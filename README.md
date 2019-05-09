@@ -1,8 +1,41 @@
 # MammalBot
-For models and work forming the MammalBot architecture
+Computational models and other work forming the MammalBot cognitive architecture.
+
+The MammalBot cognitive architecture is composed of several modular components, each representing a particular brain region and/or function. We use [ROS](https://www.ros.org) to interface with physical and virtual robots, [Gazebo](http://gazebosim.org) to simulate the virtual robots, and [SpineML](http://spineml.github.io) for most of the model descriptions. Thus, there are some prerequisites for using or developing MammalBot:
+
+## Software requirements
+* [Ubuntu 16.04](http://releases.ubuntu.com/16.04/) or an Ubuntu 16-based fork such as [Linux Mint 18.3](https://linuxmint.com/release.php?id=31) - Unfortunately, Ubuntu 18 and newer is not currently supported as MammalBot also relies on
+* [ROS Kinetic](http://wiki.ros.org/kinetic/Installation) - MammalBot is being developed with the [MiRo](https://www.miro-e.com) platform as a principal testbed, for which Kinetic is the latest supported ROS version
+* [SpineCreator](https://github.com/SpineML/SpineCreator) and the associated programs [SpineML PreFlight](https://github.com/SpineML/SpineML_PreFlight), [SpineML to BRAHMS](https://github.com/SpineML/SpineML_2_BRAHMS), and the simulation engine [BRAHMS](https://github.com/BRAHMS-SystemML/brahms).
+  * When compiling BRAHMS, be sure to use the `-DCOMPILE_PYTHON_BINDING=ON` flag to allow the use of Python components
+* *Optional:* You may also wish to install the [Gazebo](http://gazebosim.org) simulator following [these instructions](http://labs.consequentialrobotics.com/miro-e/docs/index.php?page=Developer_Install_Steps_Install_Gazebo) if you intend to use MammalBot on a simulated robot
+
+### Testing BRAHMS / Python integration
+1. Copy the `bindings_examples/examples` folder from the MammalBot download to your Namespace root folder - by default this is `/usr/local/SystemML/Namespace`
+2. Open SpineCreator and load the `bindings_examples.proj` model. You should see a very simple model with two single neurons and nothing else
+3. To run the model:
+	* Open a terminal and run `roscore` to start the ROS core 
+	* Open a second terminal window and navigate to the directory in which the model is stored
+	* Execute the model with `~/SpineML_2_BRAHMS/convert_script_s2b -m "$PWD" -e 0`
+	* If the model has run successfully, the bottom of the output log will look something like:
+    ```
+    W3    0.928236       FINISHED
+    W5    0.930353       FINISHED
+    ```
+    * To observe the model's output to an example ROS node, run `rostopic echo /example/python` in a third terminal window
+    * Execute the model again to see data output to this ROS node
+
+## Further reading
+* BRAHMS:
+	* [General documentation](http://brahms.sourceforge.net/docs/)
+	* [BRAHMS Manager](http://brahms.sourceforge.net/docs/BRAHMS%20Manager.html)
+	* [Python process development tutorial](http://brahms.sourceforge.net/docs/Quick%20Start%20(1262).html)
+	* [Python component bindings reference](http://brahms.sourceforge.net/docs/Python%20(1262).html)
+* SpineML / SpineCreator:
+	* [General documentations](http://spineml.github.io)
+	* [SpineCreator tutorial](http://spineml.github.io/spinecreator/tutorial/)
 
 ## Docker
-
 ### Downloading Docker images and running Miro Gazebo
 Go to `MammalBot/docker/Miro_Gazebo_Simulator`:
 
