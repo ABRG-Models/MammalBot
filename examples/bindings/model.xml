@@ -17,9 +17,7 @@
             </SpineCreator>
         </LL:Annotation>
         <LL:Neuron name="SC_Neuron_1" size="1" url="Neuron.xml">
-            <Property name="neuron_out" dimension="?">
-                <FixedValue value="0"/>
-            </Property>
+            <Property name="neuron_out" dimension="?"/>
         </LL:Neuron>
         <Layout url="none.xml" seed="123" minimum_distance="0"/>
     </LL:Population>
@@ -40,9 +38,7 @@
             </SpineCreator>
         </LL:Annotation>
         <LL:Neuron name="SC_Neuron_2" size="1" url="Neuron.xml">
-            <Property name="neuron_out" dimension="?">
-                <FixedValue value="0"/>
-            </Property>
+            <Property name="neuron_out" dimension="?"/>
         </LL:Neuron>
         <Layout url="none.xml" seed="123" minimum_distance="0"/>
     </LL:Population>
