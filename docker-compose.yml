@@ -1,0 +1,41 @@
+version: '3'
+
+networks:
+  ros:
+
+services:
+  gazebo:
+    command: gazebo /root/mdk/sim/worlds/miro.world
+    container_name: mammalbot_gazebo
+    image: "tacd/miro_sim:mammalbot"
+    networks:
+      ros:
+        aliases:
+        - gazebo
+    volumes:
+    - ${XAUTHORITY}:/root/.Xauthority
+    - /tmp/.X11-unix:/tmp/.X11-unix
+
+
+  ros:
+    command: roscore
+    container_name: mammalbot_roscore
+    image: "ros:melodic-ros-core"   
+    networks:
+      ros:
+        aliases:
+        - roscore
+
+  spinecreator:
+    command: spinecreator
+    container_name: mammalbot_spinecreator
+    image: "tacd/spinecreator:ros"   
+    networks:
+      ros:
+        aliases:
+        - spinecreator
+    volumes:
+    - ${XAUTHORITY}:/root/.Xauthority
+    - /tmp/.X11-unix:/tmp/.X11-unix
+    - /root/SpineML_2_BRAHMS
+    # TODO: Volumes for models and output data
