@@ -2,19 +2,29 @@ version: '3'
 
 networks:
   ros:
+    ipam:
+      config:
+      - subnet: "172.100.0.0/24"
 
 services:
   gazebo:
     command: gazebo /root/mdk/sim/worlds/miro.world
     container_name: mammalbot_gazebo
+    depends_on:
+    - ros
+    environment:
+    - ROS_IP=172.100.0.3
+    - ROS_MASTER_URI=http://roscore:11311
     image: "tacd/miro_sim:mammalbot"
     networks:
       ros:
         aliases:
         - gazebo
+        ipv4_address: 172.100.0.3
     volumes:
     - ${XAUTHORITY}:/root/.Xauthority
     - /tmp/.X11-unix:/tmp/.X11-unix
+    - mdk:/root/mdk
 
 
   ros:
@@ -25,17 +35,31 @@ services:
       ros:
         aliases:
         - roscore
+        ipv4_address: 172.100.0.2
 
-  spinecreator:
-    command: spinecreator
-    container_name: mammalbot_spinecreator
-    image: "tacd/spinecreator:ros"   
+  spineml:
+    command: bash
+    container_name: mammalbot_spineml
+    depends_on:
+    - gazebo
+    - ros
+    environment:
+    - MIRO_ROBOT_NAME=miro
+    - ROS_IP=172.100.0.4
+    image: "tacd/spinecreator:headless"   
     networks:
       ros:
         aliases:
-        - spinecreator
+        - spineml
+        ipv4_address: 172.100.0.4
+    stdin_open: true
+    tty: true
     volumes:
-    - ${XAUTHORITY}:/root/.Xauthority
-    - /tmp/.X11-unix:/tmp/.X11-unix
+    # - ${XAUTHORITY}:/root/.Xauthority
+    # - /tmp/.X11-unix:/tmp/.X11-unix
     - /root/SpineML_2_BRAHMS
+    - mdk:/root/mdk
     # TODO: Volumes for models and output data
+
+volumes:
+  mdk:
