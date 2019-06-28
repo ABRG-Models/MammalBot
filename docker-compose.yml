@@ -1,18 +1,12 @@
 version: '3'
 
-networks:
-  ros:
-    ipam:
-      config:
-      - subnet: "172.100.0.0/24"
-
 services:
   # Starts the Gazebo simulator connected to a ROS core and loads the default MiRo world
   gazebo:
     command: gazebo /root/mdk/sim/worlds/miro.world
     container_name: mammalbot_gazebo
     depends_on:
-    - ros
+    - roscore
     environment:
     - ROS_IP=172.100.0.3
     - ROS_MASTER_URI=http://roscore:11311
@@ -23,12 +17,14 @@ services:
         - gazebo
         ipv4_address: 172.100.0.3
     volumes:
+    # Allow X server sharing to display Gazebo window
     - ${XAUTHORITY}:/root/.Xauthority
     - /tmp/.X11-unix:/tmp/.X11-unix
+    # Share MDK folder so the SpineML container can import MiRo libraries
     - mdk:/root/mdk
 
   # Starts a ROS core
-  ros:
+  roscore:
     command: roscore
     container_name: mammalbot_roscore
     image: "ros:melodic-ros-core"   
@@ -44,12 +40,13 @@ services:
     container_name: mammalbot_spineml
     depends_on:
     - gazebo
-    - ros
+    - roscore
     environment:
     - MIRO_DIR_STATE=/tmp/miro2/state
     - MIRO_ROBOT_NAME=miro
     - PYTHONPATH=/root/mdk/share/python:/root/mdk/catkin_ws/install/lib/python2.7/dist-packages:/opt/ros/melodic/lib/python2.7/dist-packages
     - ROS_IP=172.100.0.4
+    - ROS_MASTER_URI=http://roscore:11311
     image: "tacd/spinecreator:headless"   
     networks:
       ros:
@@ -59,11 +56,20 @@ services:
     stdin_open: true
     tty: true
     volumes:
-    # - ${XAUTHORITY}:/root/.Xauthority
-    # - /tmp/.X11-unix:/tmp/.X11-unix
+    # Create persistent volume for S2B to preserve compiled components
     - /root/SpineML_2_BRAHMS
+    # Shared MDK volume
     - mdk:/root/mdk
-    # TODO: Volumes for models and output data
+    # Provide access to MammalBot directories
+    - ./examples/bindings:/usr/local/SystemML/Namespace/examples
+    - ../MammalBot:/root/MammalBot
+    # TODO: Volume for output data
+
+networks:
+  ros:
+    ipam:
+      config:
+      - subnet: "172.100.0.0/24"
 
 volumes:
   mdk:
