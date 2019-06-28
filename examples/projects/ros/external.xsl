@@ -32,6 +32,16 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 </Process>
 
 <Process>
+	<Name>Python_ROS_example</Name>
+	<Class>examples/python_ros</Class>
+	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
+		<m><xsl:value-of select="$spineml_output_dir"/></m>
+		<m>ExplicitEuler</m>
+	</State>
+	<Time><SampleRate><xsl:value-of select="$sampleRate"/></SampleRate></Time>
+</Process>
+
+<Process>
 	<Name>Python_ROS_MiRo_example</Name>
 	<Class>examples/python_ros_miro</Class>
 	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
@@ -51,6 +61,12 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 <Link>
 	<Src>Python_example&gt;python_out</Src>
 	<Dst>SC_Neuron_2&lt;&lt;&lt;neuron_in</Dst>
+	<Lag>0</Lag>
+</Link>
+
+<Link>
+	<Src>SC_Neuron_2&gt;neuron_out</Src>
+	<Dst>Python_ROS_example&lt;&lt;&lt;python_ros_in</Dst>
 	<Lag>0</Lag>
 </Link>
 
