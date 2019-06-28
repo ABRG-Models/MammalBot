@@ -7,6 +7,7 @@ networks:
       - subnet: "172.100.0.0/24"
 
 services:
+  # Starts the Gazebo simulator connected to a ROS core and loads the default MiRo world
   gazebo:
     command: gazebo /root/mdk/sim/worlds/miro.world
     container_name: mammalbot_gazebo
@@ -15,7 +16,7 @@ services:
     environment:
     - ROS_IP=172.100.0.3
     - ROS_MASTER_URI=http://roscore:11311
-    image: "tacd/miro_sim:mammalbot"
+    image: "tacd/miro_sim"
     networks:
       ros:
         aliases:
@@ -26,7 +27,7 @@ services:
     - /tmp/.X11-unix:/tmp/.X11-unix
     - mdk:/root/mdk
 
-
+  # Starts a ROS core
   ros:
     command: roscore
     container_name: mammalbot_roscore
@@ -37,6 +38,7 @@ services:
         - roscore
         ipv4_address: 172.100.0.2
 
+  # Opens a terminal for running existing MammalBot models
   spineml:
     command: bash
     container_name: mammalbot_spineml
@@ -44,7 +46,9 @@ services:
     - gazebo
     - ros
     environment:
+    - MIRO_DIR_STATE=/tmp/miro2/state
     - MIRO_ROBOT_NAME=miro
+    - PYTHONPATH=/root/mdk/share/python:/root/mdk/catkin_ws/install/lib/python2.7/dist-packages:/opt/ros/melodic/lib/python2.7/dist-packages
     - ROS_IP=172.100.0.4
     image: "tacd/spinecreator:headless"   
     networks:
