@@ -16,10 +16,8 @@ import rospy
 import miro2 as miro
 import numpy as np
 from geometry_msgs.msg import TwistStamped
+from std_msgs.msg import String
 
-
-# Set robot name
-topic_root = "/" + os.getenv("MIRO_ROBOT_NAME")
 
 # event function
 def brahms_process(persist, input):
@@ -57,6 +55,9 @@ def brahms_process(persist, input):
 			# Access input port 'python_ros_in'
 			index = input['iif']['default']['index']['python_ros_in']
 			port = input['iif']['default']['ports'][index]
+
+			# Set robot name
+			topic_root = "/" + os.getenv("MIRO_ROBOT_NAME")
 			
 			# Initialise ROS nodes
 			persist['ros_pub'] = rospy.Publisher(topic_root + "/control/cmd_vel", TwistStamped, queue_size=10)
@@ -83,14 +84,15 @@ def brahms_process(persist, input):
 	elif input['event']['type'] == EVENT_RUN_SERVICE:
 
 		# Set wheel speeds as input data
-		wheel_speed = [persist['python_ros_in'], persist['python_ros_in']]
+		denom = 100000000
+		wheel_speed = [persist['python_ros_in'] / denom, persist['python_ros_in'] / denom]
 
 		# Convert to command velocity
 		(dr, dtheta) = miro.utils.wheel_speed2cmd_vel(wheel_speed)
 
 		# Set velocity values
-		persist['velocity.twist.linear.x'] = dr
-		persist['velocity.twist.angular.z'] = dtheta
+		persist['velocity'].twist.linear.x = dr
+		persist['velocity'].twist.angular.z = dtheta
 
 		# Publish data to ROS node
 		persist['ros_pub'].publish(persist['velocity'])
