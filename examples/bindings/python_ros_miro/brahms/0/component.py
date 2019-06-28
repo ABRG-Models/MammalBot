@@ -89,11 +89,11 @@ def brahms_process(persist, input):
 		(dr, dtheta) = miro.utils.wheel_speed2cmd_vel(wheel_speed)
 
 		# Set velocity values
-		velocity.twist.linear.x = dr
-		velocity.twist.angular.z = dtheta
+		persist['velocity.twist.linear.x'] = dr
+		persist['velocity.twist.angular.z'] = dtheta
 
 		# Publish data to ROS node
-		persist['ros_pub'].publish(velocity)
+		persist['ros_pub'].publish(persist['velocity'])
 
 		# ok
 		output['event']['response'] = C_OK
