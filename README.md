@@ -44,6 +44,7 @@ This should work on any version of Linux but won't work on Macs, as [xhyve](http
     
 ### Docker install
 (Pending)
+`docker-compose run spineml bash`
 
 ## Further reading
 * BRAHMS:
