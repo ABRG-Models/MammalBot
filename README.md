@@ -16,7 +16,7 @@ There are two paths to getting set up:
 If you have an Ubuntu 16.04 install or are able to create one, you may install the required software packages yourself.
 1. Follow [these instructions](http://labs.consequentialrobotics.com/miro-e/docs/index.php?page=Developer_Profiles_Simulator) to install ROS, the MiRo MDK, and Gazebo
 2. Follow [these instructions](https://spineml.github.io/spinecreator/sourcelin/) to install SpineCreator and associated packages
-  * When compiling BRAHMS, be sure to use the `-DCOMPILE_PYTHON_BINDING=ON` flag to allow the use of Python components
+    * When compiling BRAHMS, be sure to use the `-DCOMPILE_PYTHON_BINDING=ON` flag to allow the use of Python components
 
 ### Docker
 As installing and configuring multiple interreliant software packages can be a time-consuming task in itself, the MammalBot repo includes a Docker Compose file that will download a prebuilt Docker environment with all the required software preconfigured. This should work on any version of Linux.
