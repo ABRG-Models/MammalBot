@@ -13,6 +13,7 @@ if not hasattr(sys, 'argv'):
 
 import os
 import rospy
+import miro2 as miro
 import numpy as np
 from geometry_msgs.msg import TwistStamped
 
