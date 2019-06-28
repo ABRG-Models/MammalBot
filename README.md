@@ -1,14 +1,29 @@
 # MammalBot
 Computational models and other work forming the MammalBot cognitive architecture.
 
-The MammalBot cognitive architecture is composed of several modular components, each representing a particular brain region and/or function. We use [ROS](https://www.ros.org) to interface with physical and virtual robots, [Gazebo](http://gazebosim.org) to simulate the virtual robots, and [SpineML](http://spineml.github.io) for most of the model descriptions. Thus, there are some prerequisites for using or developing MammalBot:
+The MammalBot cognitive architecture is composed of several modular components, each representing a particular brain region and/or function. We use [ROS](https://www.ros.org) to interface with physical and virtual robots, [Gazebo](http://gazebosim.org) to simulate virtual robots, and [SpineML](http://spineml.github.io) for most model descriptions. Thus, there are some prerequisites for using or developing MammalBot:
 
 ## Software requirements
-* [Ubuntu 16.04](http://releases.ubuntu.com/16.04/) or an Ubuntu 16-based fork such as [Linux Mint 18.3](https://linuxmint.com/release.php?id=31) - Unfortunately, Ubuntu 18 and newer is not currently supported as MammalBot also relies on
-* [ROS Kinetic](http://wiki.ros.org/kinetic/Installation) - MammalBot is being developed with the [MiRo](https://www.miro-e.com) platform as a principal testbed, for which Kinetic is the latest supported ROS version
-* [SpineCreator](https://github.com/SpineML/SpineCreator) and the associated programs [SpineML PreFlight](https://github.com/SpineML/SpineML_PreFlight), [SpineML to BRAHMS](https://github.com/SpineML/SpineML_2_BRAHMS), and the simulation engine [BRAHMS](https://github.com/BRAHMS-SystemML/brahms).
+MammalBot is being developed with the [MiRo](https://www.miro-e.com) robot as a principal testbed, so you will currently need access to either a virtual or physical MiRo to develop or use MammalBot. Assuming you don't have access to a physical robot, this means you will need:
+* Gazebo 7 for simulating the virtual MiRo robot, and
+* ROS Kinetic, the latest ROS version compatible with Gazebo 7, and
+* [Ubuntu 16.04](http://releases.ubuntu.com/16.04/) (or an Ubuntu 16-based fork such as [Linux Mint 18.3](https://linuxmint.com/release.php?id=31)), the latest Ubuntu release compatible with ROS Kinetic
+* [SpineCreator](https://github.com/SpineML/SpineCreator) and the associated programs [SpineML PreFlight](https://github.com/SpineML/SpineML_PreFlight), [SpineML to BRAHMS](https://github.com/SpineML/SpineML_2_BRAHMS), and the simulation engine [BRAHMS](https://github.com/BRAHMS-SystemML/brahms) to run MammalBot models.
+
+There are two paths to getting set up:
+
+### Native
+If you have an Ubuntu 16.04 install or are able to create one, you may install the required software packages yourself.
+1. Follow [these instructions](http://labs.consequentialrobotics.com/miro-e/docs/index.php?page=Developer_Profiles_Simulator) to install ROS, the MiRo MDK, and Gazebo
+2. Follow [these instructions](https://spineml.github.io/spinecreator/sourcelin/) to install SpineCreator and associated packages
   * When compiling BRAHMS, be sure to use the `-DCOMPILE_PYTHON_BINDING=ON` flag to allow the use of Python components
-* *Optional:* You may also wish to install the [Gazebo](http://gazebosim.org) simulator following [these instructions](http://labs.consequentialrobotics.com/miro-e/docs/index.php?page=Developer_Install_Steps_Install_Gazebo) if you intend to use MammalBot on a simulated robot
+
+### Docker
+As installing and configuring multiple interreliant software packages can be a time-consuming task in itself, the MammalBot repo includes a Docker Compose file that will download a prebuilt Docker environment with all the required software preconfigured. This should work on any version of Linux.
+1. [Install Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+2. Clone the MammalBot repository to your machine
+2. Run `docker-compose run spineml bash` from the repo directory; after the images are downloaded, a Gazebo window should appear with a virtual MiRo, and you will presented with a terminal prompt similar to `root@14595b1a7a95:/#`
+
 
 ### Testing BRAHMS / Python integration
 1. Copy the `bindings_examples/examples` folder from the MammalBot download to your Namespace root folder - by default this is `/usr/local/SystemML/Namespace`
