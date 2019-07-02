@@ -15,12 +15,17 @@ MammalBot is being developed with the [MiRo](https://www.miro-e.com) robot as a 
 There are two paths to getting set up:
 
 ### Docker *(recommended)*
-As installing and configuring multiple interreliant software packages can be a time-consuming project in itself, the MammalBot repo includes a Docker Compose file that will launch a prebuilt Docker environment with all the required software preconfigured.
+As installing and configuring multiple interreliant software packages can be a time-consuming project in itself, the MammalBot repo includes a Docker Compose file that will launch a prebuilt Docker environment with all the required software preconfigured. This should work on any version of Linux but won't work on Macs, as [xhyve](https://github.com/machyve/xhyve) (on which Docker for Mac is built) [doesn't support GPU passthrough](https://github.com/machyve/xhyve/issues/108) required for Gazebo's 3D rendering.
+#### To start
 1. [Install Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 2. Clone the MammalBot repository to your machine
-3. Run `docker-compose run spineml bash` from the repo directory; after the images are downloaded, a Gazebo window should appear with a virtual MiRo, and you will presented with a terminal prompt similar to `root@14595b1a7a95:/#` from which you may run a MammalBot experiment
-
-This should work on any version of Linux but won't work on Macs, as [xhyve](https://github.com/machyve/xhyve) (on which Docker for Mac is built) [doesn't support GPU passthrough](https://github.com/machyve/xhyve/issues/108) required for Gazebo's 3D rendering
+3. Run `docker-compose up -d` from the repo directory to download and start all required images. A Gazebo window should appear with a virtual MiRo robot in a walled arena.
+	* Gazebo will sometimes quit prematurely due to a [known bug](https://github.com/vvv-school/assignment_computed-torque/issues/3#issuecomment-364370433). If the Gazebo window doesn't appear, run `docker-compose up -d` again
+4. Run `docker exec -it mammalbot_spineml ./ros_entrypoint.sh bash` to open a Bash prompt inside the SpineML container. This should look similar to `root@14595b1a7a95:/#`. From here, you can run specific MammalBot experiments (see below).
+#### To stop
+1. Simply type `exit` within the SpineML container to return to the shell of your host machine.
+2. Run `docker-compose stop` to halt all MammalBot containers.
+	* You can restart MammalBot later with `docker-compose start`
 
 ### Native
 If you have an Ubuntu 16.04 install or are able to create one, you may install the required software packages yourself.
