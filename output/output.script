@@ -1,0 +1,426 @@
+#!/bin/bash
+REBUILD_COMPONENTS=$1
+REBUILD_SYSTEMML=$2
+MODEL_DIR=$3 
+INPUT=$4 
+BRAHMS_NS=$5
+SPINEML_2_BRAHMS_DIR=$6
+OUTPUT_DIR_BASE=$7 
+XSL_SCRIPT_PATH=$8
+VERBOSE_BRAHMS=${9}
+
+
+ASSUME_COMPONENTS_PRESENT=${10}
+
+BRAHMS_DEBUG=${11}
+
+BRAHMS_NOGUI=${12}
+NODES=${13} 
+NODEARCH=${14}
+
+echo "VERBOSE_BRAHMS: $VERBOSE_BRAHMS"
+echo "BRAHMS_DEBUG: $BRAHMS_DEBUG"
+
+
+BRAHMS_VERSION=`brahms --ver`
+VERSION_BRAHMS_MAJ=`echo $BRAHMS_VERSION | awk -F'.' '{print $1}'`
+VERSION_BRAHMS_MIN=`echo $BRAHMS_VERSION | awk -F'.' '{print $2}'`
+VERSION_BRAHMS_REL=`echo $BRAHMS_VERSION | awk -F'.' '{print $3}'`
+VERSION_BRAHMS_REV=`echo $BRAHMS_VERSION | awk -F'.' '{print $4}'`
+VERSION_TOO_OLD=0
+if [ $VERSION_BRAHMS_MAJ -ge 0 ]; then
+  echo "VERSION_BRAHMS_MAJ=$VERSION_BRAHMS_MAJ: ok"
+  if [ $VERSION_BRAHMS_MIN -ge 8 ]; then
+    echo "VERSION_BRAHMS_MIN=$VERSION_BRAHMS_MIN: ok"
+    if [ $VERSION_BRAHMS_REL -ge 0 ]; then
+      echo "VERSION_BRAHMS_REL=$VERSION_BRAHMS_REL: ok"
+      if [ $VERSION_BRAHMS_REV -ge 1 ]; then
+        echo "VERSION_BRAHMS_REV=$VERSION_BRAHMS_REV: ok"
+      else # 1
+        VERSION_TOO_OLD=1
+      fi
+    else # 2
+      VERSION_TOO_OLD=1
+    fi
+  else # 3
+    VERSION_TOO_OLD=1
+  fi
+else # 4
+  VERSION_TOO_OLD=1
+fi
+
+if [ x"$VERSION_TOO_OLD" = "x"1 ]; then
+  echo "This version of SpineML_2_BRAHMS requires BRAHMS version 0.8.0.1 or greater. Exiting."
+  exit 1
+fi
+
+
+echo "NODES: $NODES"
+echo "NODEARCH: $NODEARCH"
+
+if [ "x$VERBOSE_BRAHMS" = "xno" ]; then
+  VERBOSE_BRAHMS=""
+fi
+
+if [ "x$NODES" = "x" ]; then
+  NODES=0
+fi
+
+
+if [ "x$NODEARCH" = "xamd" ]; then
+  NODEARCH="-l arch=amd*"
+elif [ "x$NODEARCH" = "xintel" ]; then
+  NODEARCH="-l arch=intel*"
+else
+  echo "Ignoring invalid node architecture '$NODEARCH'"
+  NODEARCH=""
+fi
+
+
+if [[ "$NODES" -gt 0 ]]; then
+  echo "Submitting execution Sun Grid Engine with $NODES nodes."
+fi
+
+
+echo "SPINEML_2_BRAHMS_DIR is $SPINEML_2_BRAHMS_DIR"
+
+
+rawurlencode() {
+  local string="${1}"
+  local strlen=${#string}
+  local encoded=""
+
+  for (( pos=0 ; pos<strlen ; pos++ )); do
+     c=${string:$pos:1}
+     case "$c" in
+        [-_.~a-zA-Z0-9] ) o="${c}" ;;
+        * )               printf -v o '%%%02x' "'$c"
+     esac
+     encoded+="${o}"
+  done
+  echo "${encoded}"
+}
+
+
+SPINEML_RUN_DIR="$OUTPUT_DIR_BASE/run"
+
+mkdir -p "$SPINEML_RUN_DIR"
+
+
+SPINEML_RUN_DIR_PERCENT_ENCODED=$(rawurlencode "$SPINEML_RUN_DIR")
+
+
+SPINEML_LOG_DIR="$OUTPUT_DIR_BASE/log"
+SPINEML_LOG_DIR_PERCENT_ENCODED=$(rawurlencode "$SPINEML_LOG_DIR")
+mkdir -p "$SPINEML_LOG_DIR"
+
+
+SPINEML_CODE_DIR="$SPINEML_RUN_DIR/code"
+mkdir -p "$SPINEML_CODE_DIR"
+
+CODE_NUM="0"
+
+
+SPINEML_2_BRAHMS_NS="$SPINEML_2_BRAHMS_DIR/Namespace"
+echo "SPINEML_2_BRAHMS_NS is $SPINEML_2_BRAHMS_NS"
+echo "BRAHMS_NS is $BRAHMS_NS"
+
+
+DBG_FLAG=""
+BRAHMS_EXE="brahms"
+if [ "x${BRAHMS_DEBUG}" = "xyes" ]; then
+
+    # Add -g to compiler flags
+    DBG_FLAG="-g"
+
+    # Use the brahms-gdb script as the brahm exe
+    BRAHMS_EXE="brahms-gdb"
+
+    # If rebuild-all then move gdbcmd, so it will be re-generated and
+    # all the newly re-built components will have a corresponding entry
+    # in gdbcmd.
+    if [ -f ~/gdbcmd ] && [ "$REBUILD_COMPONENTS" = "true" ]; then
+        mv -f ~/gdbcmd ~/gdbcmd.save
+    fi
+
+    # Initialise gdbcmd if it doesn't exist.
+    if [ ! -f ~/gdbcmd ]; then
+        echo "dir ~/src/brahms" > ~/gdbcmd
+    fi
+fi
+
+
+BRAHMS_CMD="${BRAHMS_EXE} $VERBOSE_BRAHMS $BRAHMS_NOGUI --par-NamespaceRoots=\"$BRAHMS_NS:$SPINEML_2_BRAHMS_NS:$SPINEML_2_BRAHMS_DIR/tools\" \"$SPINEML_RUN_DIR/sys-exe.xml\""
+
+
+
+if [[ "$NODES" -gt 0 ]]; then # Sun Grid Engine mode
+
+  
+  rm -f "$SPINEML_RUN_DIR/sys-exe.xml"
+
+  
+  for (( NODE=1; NODE<=$NODES; NODE++ )); do
+    echo "Writing run_brahms qsub shell script: $SPINEML_RUN_DIR/run_brahms_$NODE.sh for node $NODE of $NODES"
+    cat > "$SPINEML_RUN_DIR/run_brahms_$NODE.sh" <<EOF
+#!/bin/sh
+#$  -l mem=8G -l h_rt=04:00:00 $NODEARCH
+# First, before executing brahms, this script must find out its IP address and write this into a file.
+
+# Obtain first IPv4 address from an eth device.
+
+MYIP=\`ip addr show|grep eth[0-9]|grep inet | awk -F ' ' '{print \$2}' | awk -F '/' '{print \$1}' | head -n1\`
+echo "\$MYIP" > "$SPINEML_RUN_DIR/brahms_$NODE.ip"
+
+# Now wait until sys-exe.xml has appeared
+while [ ! -f "$SPINEML_RUN_DIR/sys-exe.xml" ]; do
+  sleep 1
+done
+
+# Finally, can run brahms
+cd "$SPINEML_RUN_DIR"
+BRAHMS_CMD="brahms $VERBOSE_BRAHMS --par-NamespaceRoots=\"$BRAHMS_NS:$SPINEML_2_BRAHMS_NS:$SPINEML_2_BRAHMS_DIR/tools\" \"$SPINEML_RUN_DIR/sys-exe.xml\" --voice-$NODE"
+eval \$BRAHMS_CMD
+EOF
+
+  qsub "$SPINEML_RUN_DIR/run_brahms_$NODE.sh"
+done
+fi
+
+# Set up the include path for rng.h and impulse.h
+if [ -f /usr/include/spineml-2-brahms/rng.h ]; then
+    # In this case, it looks like the user has the debian package
+    echo "I THINK USER HAS DEBIAN PACKAGE"
+    SPINEML_2_BRAHMS_INCLUDE_PATH=/usr/include/spineml-2-brahms
+else
+    # Use a path relative to SPINEML_2_BRAHMS_DIR
+    SPINEML_2_BRAHMS_INCLUDE_PATH="$SPINEML_2_BRAHMS_DIR/include"
+fi
+echo "SPINEML_2_BRAHMS_INCLUDE_PATH=$SPINEML_2_BRAHMS_INCLUDE_PATH"
+
+# Set up the path to the "tools" directory.
+
+# exit on first error
+#set -e
+if [ "$REBUILD_COMPONENTS" = "true" ]; then
+echo "Removing existing components in advance of rebuilding..."
+# clean up the temporary dirs - we don't want old component versions lying around!
+rm -R "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp"/* &> /dev/null
+fi
+
+if [ ! x"${ASSUME_COMPONENTS_PRESENT}" = "x" ]; then
+echo "DANGER:"
+echo "DANGER: output.script is ASSUMING that all SpineML components have been built!"
+echo "DANGER: (you would want to do this if running the model over and over with a batch script)"
+echo "DANGER:"
+fi
+
+if [ x"${ASSUME_COMPONENTS_PRESENT}" = "x" ]; then
+
+echo "Creating the Neuron populations..."
+
+
+# Also update time.txt for SpineCreator / other tools
+echo "*Compiling neuron 1 / 2" > "${MODEL_DIR}/time.txt"
+
+echo "<Number>1</Number>" &> "$SPINEML_RUN_DIR/counter.file"
+
+DIRNAME="$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0"
+CODE_NUM=$((CODE_NUM+1))
+diff -q "$MODEL_DIR/Neuron.xml" "$DIRNAME/Neuron.xml" &> /dev/null
+
+if [ $? == 0 ] && [ -f "$DIRNAME/component.cpp" ] && [ -f "$DIRNAME/component.so" ]; then
+echo "Component for population 1 exists, skipping ($DIRNAME/component.cpp)"
+
+cp "$DIRNAME/component.cpp" "$SPINEML_CODE_DIR/component$CODE_NUM.cpp"
+else
+echo "Creating component.cpp for population 1 ($DIRNAME/component.cpp)"
+
+xsltproc -o "$SPINEML_CODE_DIR/component$CODE_NUM.cpp" --stringparam spineml_run_dir "$SPINEML_RUN_DIR_PERCENT_ENCODED" "$XSL_SCRIPT_PATH/LL/SpineML_2_BRAHMS_CL_neurons.xsl" "$MODEL_DIR/model.xml"
+XSLTPROCRTN=$?
+echo "xsltproc (for population component creation) returned: $XSLTPROCRTN"
+if [ $XSLTPROCRTN -ne "0" ]; then
+  echo "XSLT error generating population/neuron body component; exiting"
+  exit $XSLTPROCRTN
+fi
+if [ ! -f "$SPINEML_CODE_DIR/component$CODE_NUM.cpp" ]; then
+echo "Error: no component$CODE_NUM.cpp was generated by xsltproc from LL/SpineML_2_BRAHMS_CL_neurons.xsl and the model"
+exit -1
+fi
+mkdir -p "$DIRNAME"
+
+cp "$MODEL_DIR/Neuron.xml" "${SPINEML_2_BRAHMS_INCLUDE_PATH}/rng.h" "${SPINEML_2_BRAHMS_INCLUDE_PATH}/impulse.h" "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/"
+
+cp "$SPINEML_CODE_DIR/component$CODE_NUM.cpp" "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/component.cpp"
+echo "<Release><Language>1199</Language></Release>" &> "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/release.xml"
+
+echo 'g++ '$DBG_FLAG' -fPIC -Werror -pthread -O3 -shared -D__GLN__ component.cpp -o component.so -I`brahms --showinclude` -I`brahms --shownamespace` -I`brahms --showinclude` -I`brahms --shownamespace`' &> "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/build"
+
+pushd "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/"
+if [ "x${BRAHMS_DEBUG}" = "xyes" ]; then
+    # search for gdbcmd line and and add if necessary.
+    grep -q -F "dir `pwd`" ~/gdbcmd || echo "dir `pwd`" >> ~/gdbcmd
+fi
+echo "<Node><Type>Process</Type><Specification><Connectivity><InputSets></InputSets></Connectivity></Specification></Node>" &> ../../node.xml
+chmod +x build
+echo "Compiling component binary"
+./build
+popd &> /dev/null
+fi # The check if component code exists
+
+
+# Also update time.txt for SpineCreator / other tools
+echo "*Compiling neuron 2 / 2" > "${MODEL_DIR}/time.txt"
+
+echo "<Number>2</Number>" &> "$SPINEML_RUN_DIR/counter.file"
+
+DIRNAME="$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0"
+CODE_NUM=$((CODE_NUM+1))
+diff -q "$MODEL_DIR/Neuron.xml" "$DIRNAME/Neuron.xml" &> /dev/null
+
+if [ $? == 0 ] && [ -f "$DIRNAME/component.cpp" ] && [ -f "$DIRNAME/component.so" ]; then
+echo "Component for population 2 exists, skipping ($DIRNAME/component.cpp)"
+
+cp "$DIRNAME/component.cpp" "$SPINEML_CODE_DIR/component$CODE_NUM.cpp"
+else
+echo "Creating component.cpp for population 2 ($DIRNAME/component.cpp)"
+
+xsltproc -o "$SPINEML_CODE_DIR/component$CODE_NUM.cpp" --stringparam spineml_run_dir "$SPINEML_RUN_DIR_PERCENT_ENCODED" "$XSL_SCRIPT_PATH/LL/SpineML_2_BRAHMS_CL_neurons.xsl" "$MODEL_DIR/model.xml"
+XSLTPROCRTN=$?
+echo "xsltproc (for population component creation) returned: $XSLTPROCRTN"
+if [ $XSLTPROCRTN -ne "0" ]; then
+  echo "XSLT error generating population/neuron body component; exiting"
+  exit $XSLTPROCRTN
+fi
+if [ ! -f "$SPINEML_CODE_DIR/component$CODE_NUM.cpp" ]; then
+echo "Error: no component$CODE_NUM.cpp was generated by xsltproc from LL/SpineML_2_BRAHMS_CL_neurons.xsl and the model"
+exit -1
+fi
+mkdir -p "$DIRNAME"
+
+cp "$MODEL_DIR/Neuron.xml" "${SPINEML_2_BRAHMS_INCLUDE_PATH}/rng.h" "${SPINEML_2_BRAHMS_INCLUDE_PATH}/impulse.h" "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/"
+
+cp "$SPINEML_CODE_DIR/component$CODE_NUM.cpp" "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/component.cpp"
+echo "<Release><Language>1199</Language></Release>" &> "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/release.xml"
+
+echo 'g++ '$DBG_FLAG' -fPIC -Werror -pthread -O3 -shared -D__GLN__ component.cpp -o component.so -I`brahms --showinclude` -I`brahms --shownamespace` -I`brahms --showinclude` -I`brahms --shownamespace`' &> "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/build"
+
+pushd "$SPINEML_2_BRAHMS_NS/dev/SpineML/temp/NB/Neuron/brahms/0/"
+if [ "x${BRAHMS_DEBUG}" = "xyes" ]; then
+    # search for gdbcmd line and and add if necessary.
+    grep -q -F "dir `pwd`" ~/gdbcmd || echo "dir `pwd`" >> ~/gdbcmd
+fi
+echo "<Node><Type>Process</Type><Specification><Connectivity><InputSets></InputSets></Connectivity></Specification></Node>" &> ../../node.xml
+chmod +x build
+echo "Compiling component binary"
+./build
+popd &> /dev/null
+fi # The check if component code exists
+
+
+fi # The enclosing check if the user wants to skip component existence checking
+
+
+
+if [ x"${ASSUME_COMPONENTS_PRESENT}" = "x" ]; then
+echo "Creating the projections..."
+
+# Also update time.txt for SpineCreator / other tools
+echo "*Compiling projections 1 / 0" > "${MODEL_DIR}/time.txt"
+
+
+# Also update time.txt for SpineCreator / other tools
+echo "*Compiling projections 2 / 0" > "${MODEL_DIR}/time.txt"
+
+
+
+fi 
+
+if [ "$REBUILD_SYSTEMML" = "true" ] || [ ! -f "$SPINEML_RUN_DIR/sys.xml" ] ; then
+  echo "Building the SystemML system..."
+
+  # Before calling xsltproc, check if the SpineML system has its own
+  # external.xsl file for xsl/LL. If not, then copy
+  # $XSL_SCRIPT_PATH/LL/external_default.xsl to
+  # $XSL_SCRIPT_PATH/LL/external.xsl
+  if [ -f "${MODEL_DIR}/external.xsl" ]; then
+    cp "${MODEL_DIR}/external.xsl" "${XSL_SCRIPT_PATH}/LL/external.xsl"
+  else
+    cp "${XSL_SCRIPT_PATH}/LL/external_default.xsl" "${XSL_SCRIPT_PATH}/LL/external.xsl"
+  fi
+
+  # Below line only works with very latest versions of xsltproc
+  #xsltproc --maxdepth 50000 --maxvars 500000 -o "$SPINEML_RUN_DIR/sys.xml" --stringparam spineml_model_dir "$MODEL_DIR" "$XSL_SCRIPT_PATH/LL/SpineML_2_BRAHMS_NL.xsl" "$MODEL_DIR/$INPUT"
+  xsltproc -o "$SPINEML_RUN_DIR/sys.xml" --stringparam spineml_model_dir "$MODEL_DIR" "$XSL_SCRIPT_PATH/LL/SpineML_2_BRAHMS_NL.xsl" "$MODEL_DIR/$INPUT"
+  XSLTPROCRTN=$?
+  echo "xsltproc (for SystemML system) returned: $XSLTPROCRTN"
+  if [ $XSLTPROCRTN -ne "0" ]; then
+    echo "XSLT error generating SystemML system; exiting"
+    exit $XSLTPROCRTN
+  fi
+else
+  echo "Re-using the SystemML system."
+fi
+
+if [ "$REBUILD_SYSTEMML" = "true" ] || [ ! -f $SPINEML_RUN_DIR/sys-exe.xml ] ; then
+
+echo "Building the SystemML execution..."
+
+
+if [[ "$NODES" -gt 1 ]]; then
+  for (( NODE=1; NODE<=$NODES; NODE++ )); do
+    COUNTER="1"
+    
+    SUN_GRID_ENGINE_TIMEOUT="120"
+    echo "Waiting up to $SUN_GRID_ENGINE_TIMEOUT seconds for node $NODE to record its IP address..."
+    while [ ! -f "$SPINEML_RUN_DIR/brahms_$NODE.ip" ] && [ "$COUNTER" -lt "$SUN_GRID_ENGINE_TIMEOUT" ]; do
+      sleep 1
+      COUNTER=$((COUNTER+1))
+    done
+    if [ ! -f "$SPINEML_RUN_DIR/brahms_$NODE.ip" ]; then
+      
+      echo "Error: Failed to learn IP address for brahms node $NODE, exiting."
+      exit -1
+    fi 
+  done
+
+  echo -n "<Voices>" > "$SPINEML_RUN_DIR/brahms_voices.xml"
+  for (( NODE=1; NODE<=$NODES; NODE++ )); do
+    read NODEIP < "$SPINEML_RUN_DIR/brahms_$NODE.ip"
+    echo -n "<Voice><Address protocol=\"sockets\">$NODEIP</Address></Voice>" >> "$SPINEML_RUN_DIR/brahms_voices.xml"
+  done
+  echo -n "</Voices>" >> "$SPINEML_RUN_DIR/brahms_voices.xml"
+else
+  echo "<Voices><Voice/></Voices>" > "$SPINEML_RUN_DIR/brahms_voices.xml"
+fi
+
+
+xsltproc -o "$SPINEML_RUN_DIR/sys-exe.xml" --stringparam voices_file "$SPINEML_RUN_DIR_PERCENT_ENCODED/brahms_voices.xml" "$XSL_SCRIPT_PATH/LL/SpineML_2_BRAHMS_EXPT.xsl" "$MODEL_DIR/$INPUT"
+XSLTPROCRTN=$?
+echo "xsltproc (for sys-exe.xml) returned: $XSLTPROCRTN"
+if [ $XSLTPROCRTN -ne "0" ]; then
+  echo "XSLT error generating sys-exe.xml; exiting"
+  exit $XSLTPROCRTN
+fi
+
+else
+  echo "Re-using the SystemML execution."
+fi
+
+echo "Done!"
+
+
+if [ "x${BRAHMS_DEBUG}" = "xyes" ]; then
+    echo "run" >> ~/gdbcmd
+fi
+
+
+
+if [[ "$NODES" -eq 0 ]]; then
+  cd "$SPINEML_RUN_DIR"
+  echo -n "Executing: $BRAHMS_CMD from pwd: "
+  echo `pwd`
+  eval $BRAHMS_CMD
+else
+  echo "Simulation has been submitted to Sun Grid Engine."
+fi

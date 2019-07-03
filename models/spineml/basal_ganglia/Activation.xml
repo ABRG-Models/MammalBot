@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<SpineML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.shef.ac.uk/SpineMLComponentLayer" xsi:schemaLocation="http://www.shef.ac.uk/SpineMLComponentLayer SpineMLComponentLayer.xsd">
+ <ComponentClass name="Activation" type="weight_update">
+  <Annotation>
+   <SpineCreator/>
+  </Annotation>
+  <Dynamics initial_regime="Activation">
+   <Regime name="Activation">
+    <OnCondition target_regime="Activation">
+     <StateAssignment variable="a">
+      <MathInline>(a - u) * decay_const + u</MathInline>
+     </StateAssignment>
+     <Trigger>
+      <MathInline>true</MathInline>
+     </Trigger>
+    </OnCondition>
+   </Regime>
+   <Alias name="k" dimension="?">
+    <MathInline>25</MathInline>
+   </Alias>
+   <Alias name="dt" dimension="?">
+    <MathInline>0.01</MathInline>
+   </Alias>
+   <Alias name="decay_const" dimension="?">
+    <MathInline>exp(-k * dt)</MathInline>
+   </Alias>
+   <StateVariable name="a" dimension="?"/>
+  </Dynamics>
+  <AnalogReceivePort name="u" dimension="?"/>
+  <AnalogSendPort name="a"/>
+ </ComponentClass>
+</SpineML>

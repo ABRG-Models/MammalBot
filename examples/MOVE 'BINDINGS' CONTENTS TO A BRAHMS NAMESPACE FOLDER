@@ -1,1 +1,0 @@
-The contents of the 'bindings' folder must be moved to a BRAHMS Namespace folder for the components to function. This is likely to be /usr/local/SystemML/Namespace/ or ~/SpineML_2_BRAHMS/Namespace/ - you may have several defined Namespace roots.
