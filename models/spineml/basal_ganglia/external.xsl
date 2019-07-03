@@ -22,18 +22,8 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 
 <!-- These are the external processes -->
 <Process>
-	<Name>Python_example</Name>
-	<Class>examples/python</Class>
-	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
-		<m><xsl:value-of select="$spineml_output_dir"/></m>
-		<m>ExplicitEuler</m>
-	</State>
-	<Time><SampleRate><xsl:value-of select="$sampleRate"/></SampleRate></Time>
-</Process>
-
-<Process>
-	<Name>Python_ROS_example</Name>
-	<Class>examples/python_ros</Class>
+	<Name>BG_interface</Name>
+	<Class>mammalbot/basal_ganglia</Class>
 	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
 		<m><xsl:value-of select="$spineml_output_dir"/></m>
 		<m>ExplicitEuler</m>

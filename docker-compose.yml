@@ -53,17 +53,15 @@ services:
         aliases:
         - spineml
         ipv4_address: 172.100.0.4
-    stdin_open: true
     tty: true
     volumes:
-    # Create persistent volume for S2B to preserve compiled components
-    - /root/SpineML_2_BRAHMS
     # Shared MDK volume
     - mdk:/root/mdk
     # Provide access to MammalBot directories
-    - ./examples/bindings:/usr/local/SystemML/Namespace/examples
+    - ./bindings:/usr/local/SystemML/Namespace/mammalbot
     - ../MammalBot:/root/MammalBot
-    # TODO: Volume for output data
+    # Provide access to data output directory
+    - ./output:/root/SpineML_2_BRAHMS/temp
 
 networks:
   ros:

@@ -1,0 +1,9 @@
+<LogReport>
+	<AnalogLog>
+		<LogFile>SC_Neuron_1_neuron_out_log.bin</LogFile>
+		<LogFileType>binary</LogFileType>
+		<LogEndTime>3000.000000</LogEndTime>
+		<LogAll size="1" headings="neuron_out" type="double" dims=""/>
+		<TimeStep dt="0.100000"/>
+	</AnalogLog>
+</LogReport>
