@@ -3,6 +3,9 @@ Computational models and related work for the MammalBot cognitive architecture.
 
 *This open source software code was developed in part or in whole in the Human Brain Project, funded from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 785907 (Human Brain Project SGA2).*
 
+![alt text](./images/integration.png "MammalBot Infrastructure")
+
+
 The MammalBot cognitive architecture is composed of several modular components, each representing a particular brain region and/or function. We use [ROS](https://www.ros.org) to interface with physical and virtual robots, [Gazebo](http://gazebosim.org) to simulate virtual robots, and [SpineML](http://spineml.github.io) for most model descriptions. Thus, there are some prerequisites for using or developing MammalBot:
 
 ## Software requirements
