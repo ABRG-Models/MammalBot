@@ -6,7 +6,7 @@ MammalBot is a layered control system architecture modelled on the mammalian bra
 
 ## Technical integration
 To avoid generating onerous constraints on flexible development, MammalBot uses an agile approach based around a preferred set of software tools. This framework, illustrated below, is intended to maximise interoperability between different kinds of models and to minimise the difficulty of deployment on robot hardware. Solid lines indicate native compatibility between
-components, and dashed lines indicate where compatibility may be achieved via a conversion tool or wrapper utility.
+components, and dashed lines indicate where compatibility may be achieved via a conversion or wrapper utility.
 
 ![alt text](./images/integration.png "MammalBot Infrastructure")
 
