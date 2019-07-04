@@ -39,6 +39,11 @@
 import brahms
 import numpy
 
+import sys
+# Needed for importing rospy in embedded scenario
+if not hasattr(sys, 'argv'):
+    sys.argv  = ['']
+
 
 # event function
 def brahms_process(persist, input):
