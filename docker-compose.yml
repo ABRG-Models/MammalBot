@@ -1,7 +1,18 @@
 version: '3'
 
 services:
-  # Starts the Gazebo simulator connected to a ROS core and loads the default MiRo world
+  # ROS core
+  roscore:
+    command: roscore
+    container_name: mammalbot_roscore
+    image: "ros:melodic-ros-core"   
+    networks:
+      ros:
+        aliases:
+        - roscore
+        ipv4_address: 172.100.0.2
+
+  # Gazebo simulator and virtual MiRo
   gazebo:
     command: gazebo /root/mdk/sim/worlds/miro.world
     container_name: mammalbot_gazebo
@@ -16,6 +27,7 @@ services:
         aliases:
         - gazebo
         ipv4_address: 172.100.0.3
+    stop_signal: SIGINT
     volumes:
     # Allow X server sharing to display Gazebo window
     - ${XAUTHORITY}:/root/.Xauthority
@@ -23,45 +35,39 @@ services:
     # Share MDK folder so the SpineML container can import MiRo libraries
     - mdk:/root/mdk
 
-  # Starts a ROS core
-  roscore:
-    command: roscore
-    container_name: mammalbot_roscore
-    image: "ros:melodic-ros-core"   
-    networks:
-      ros:
-        aliases:
-        - roscore
-        ipv4_address: 172.100.0.2
-
-  # Opens a terminal for running existing MammalBot models
-  spineml:
+  # SpineCreator and simulation execution
+  spinecreator:
     command: bash
-    container_name: mammalbot_spineml
-    depends_on:
-    - gazebo
-    - roscore
+    container_name: mammalbot_spinecreator
+    # depends_on:
+    # - gazebo
+    # - roscore
     environment:
     - MIRO_DIR_STATE=/tmp/miro2/state
     - MIRO_ROBOT_NAME=miro
     - PYTHONPATH=/root/mdk/share/python:/root/mdk/catkin_ws/install/lib/python2.7/dist-packages:/opt/ros/melodic/lib/python2.7/dist-packages
     - ROS_IP=172.100.0.4
     - ROS_MASTER_URI=http://roscore:11311
-    image: "tacd/spinecreator:headless"   
+    image: "tacd/spinecreator:ros"   
     networks:
       ros:
         aliases:
-        - spineml
+        - spinecreator
         ipv4_address: 172.100.0.4
     tty: true
     volumes:
+    # Allow X server sharing to display Gazebo window
+    - ${XAUTHORITY}:/root/.Xauthority
+    - /tmp/.X11-unix:/tmp/.X11-unix
     # Shared MDK volume
     - mdk:/root/mdk
     # Provide access to MammalBot directories
     - ./bindings:/usr/local/SystemML/Namespace/mammalbot
-    - ../MammalBot:/root/MammalBot
+    - ./models/spineml:/root/MammalBot
     # Provide access to data output directory
     - ./output:/root/SpineML_2_BRAHMS/temp
+    # Peristent SpineML_2_BRAHMS data directory
+    - s2b:/root/SpineML_2_BRAHMS
 
 networks:
   ros:
@@ -71,3 +77,4 @@ networks:
 
 volumes:
   mdk:
+  s2b:
