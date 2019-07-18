@@ -2,16 +2,13 @@
 # process, and does not need to be built - BRAHMS can run it
 # as it stands.
 
-
-import brahms
-import numpy
-
 import sys
 # Needed for importing rospy in embedded scenario
 if not hasattr(sys, 'argv'):
     sys.argv  = ['']
 
 import os
+import brahms
 import rospy
 import miro2 as miro
 import numpy as np

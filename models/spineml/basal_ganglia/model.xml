@@ -313,7 +313,7 @@
             </Property>
         </LL:Neuron>
         <Layout url="none.xml" seed="123" minimum_distance="0"/>
-        <LL:Projection dst_population="OUTPUT">
+        <LL:Projection dst_population="GPi_OUTPUT">
             <LL:Annotation>
                 <SpineCreator>
                     <DrawOptions style="4" showlabel="0"/>
@@ -333,12 +333,12 @@
                         <FixedValue value="0"/>
                     </Delay>
                 </OneToOneConnection>
-                <LL:WeightUpdate name="GPi SNr to OUTPUT Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                <LL:WeightUpdate name="GPi SNr to GPi_OUTPUT Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
                     <Property name="a" dimension="?">
                         <FixedValue value="0"/>
                     </Property>
                 </LL:WeightUpdate>
-                <LL:PostSynapse name="GPi SNr to OUTPUT Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="input">
+                <LL:PostSynapse name="GPi SNr to GPi_OUTPUT Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="input">
                     <Property name="e" dimension="?">
                         <FixedValue value="-0.2"/>
                     </Property>
@@ -365,7 +365,7 @@
                 <is_visualised value="0"/>
             </SpineCreator>
         </LL:Annotation>
-        <LL:Neuron name="OUTPUT" size="6" url="Null_output.xml"/>
+        <LL:Neuron name="GPi_OUTPUT" size="6" url="Null_output.xml"/>
         <Layout url="none.xml" seed="123" minimum_distance="0"/>
     </LL:Population>
     <LL:Population>
