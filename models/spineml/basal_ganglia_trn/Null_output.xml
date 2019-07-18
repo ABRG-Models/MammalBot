@@ -10,7 +10,7 @@
     <MathInline>input</MathInline>
    </Alias>
   </Dynamics>
-  <AnalogReceivePort name="input" dimension="?"/>
   <AnalogSendPort name="output"/>
+  <AnalogReceivePort name="input" dimension="?"/>
  </ComponentClass>
 </SpineML>

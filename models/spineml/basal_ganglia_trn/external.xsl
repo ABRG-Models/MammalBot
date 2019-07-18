@@ -3,10 +3,6 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 <xsl:output method="xml" omit-xml-declaration="no" version="1.0" encoding="UTF-8" indent="yes"/>
 
-<!--
-     This is a very brief example of how to link a SpineML model to a external components and pass data between them
--->
-
 <xsl:param name="spineml_output_dir" select="'./'"/>
 
 <!-- START TEMPLATE -->
@@ -22,8 +18,18 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 
 <!-- These are the external processes -->
 <Process>
-	<Name>BG_interface</Name>
-	<Class>mammalbot/basal_ganglia</Class>
+	<Name>BG_output</Name>
+	<Class>mammalbot/basal_ganglia/output</Class>
+	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
+		<m><xsl:value-of select="$spineml_output_dir"/></m>
+		<m>ExplicitEuler</m>
+	</State>
+	<Time><SampleRate><xsl:value-of select="$sampleRate"/></SampleRate></Time>
+</Process>
+
+<Process>
+	<Name>BG_input</Name>
+	<Class>mammalbot/basal_ganglia/input</Class>
 	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
 		<m><xsl:value-of select="$spineml_output_dir"/></m>
 		<m>ExplicitEuler</m>
@@ -33,8 +39,8 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 
 <!-- These are the links between external and SpineML processes (or between external processes) -->
 <Link>
-	<Src>GPi_OUTPUT&gt;output</Src>
-	<Dst>BG_interface&lt;&lt;&lt;gpi_in</Dst>
+	<Src>MCtx_OUTPUT&gt;output</Src>
+	<Dst>BG_output&lt;&lt;&lt;mctx_out</Dst>
 	<Lag>0</Lag>
 </Link>
 

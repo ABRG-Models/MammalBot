@@ -1,0 +1,1039 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LL:SpineML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.shef.ac.uk/SpineMLNetworkLayer" xmlns:LL="http://www.shef.ac.uk/SpineMLLowLevelNetworkLayer" xsi:schemaLocation="http://www.shef.ac.uk/SpineMLLowLevelNetworkLayer SpineMLLowLevelNetworkLayer.xsd http://www.shef.ac.uk/SpineMLNetworkLayer SpineMLNetworkLayer.xsd" name="TRN model">
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-1"/>
+                <yPos value="2.8026e-45"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="255" green="0" blue="0"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="Striatum D1" size="6" url="Striatum.xml">
+            <Property name="W_1" dimension="?">
+                <FixedValue value="0.5"/>
+            </Property>
+            <Property name="W_2" dimension="?">
+                <FixedValue value="0.5"/>
+            </Property>
+            <Property name="da" dimension="?">
+                <FixedValue value="0.2"/>
+            </Property>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="GPi SNr">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="0" showlabel="0"/>
+                    <start x="-1.01754" y="-0.5"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-1.01754" ypos="-1.64"/>
+                            <C2 xpos="-1.01989" ypos="-2.52176"/>
+                            <end xpos="-1.01989" ypos="-3.52176"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Striatum D1 to GPi SNr Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Striatum D1 to GPi SNr Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_3">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0.2"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="3"/>
+                <yPos value="-2.8026e-45"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="255" green="0" blue="0"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="Striatum D2" size="6" url="Striatum.xml">
+            <Property name="W_1" dimension="?">
+                <FixedValue value="0.5"/>
+            </Property>
+            <Property name="W_2" dimension="?">
+                <FixedValue value="0.5"/>
+            </Property>
+            <Property name="da" dimension="?">
+                <FixedValue value="-0.2"/>
+            </Property>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="GPe">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="0" showlabel="0"/>
+                    <start x="3.00171" y="-0.5"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="3.00172" ypos="-1.5"/>
+                            <C2 xpos="3.00047" ypos="-2.50264"/>
+                            <end xpos="3.00048" ypos="-3.50265"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Striatum D2 to GPe Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Striatum D2 to GPe Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_2">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0.2"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="0.98"/>
+                <yPos value="-2.8026e-45"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="85" green="170" blue="255"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="STN" size="6" url="STN_GP_MCTx_TRN.xml">
+            <Property name="W_1" dimension="?">
+                <FixedValue value="0.5"/>
+            </Property>
+            <Property name="W_2" dimension="?">
+                <FixedValue value="0.5"/>
+            </Property>
+            <Property name="W_3" dimension="?">
+                <FixedValue value="-1"/>
+            </Property>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="SUM STN">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="1" y="-0.5"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="1" ypos="-1"/>
+                            <C2 xpos="0.999964" ypos="-0.499183"/>
+                            <end xpos="0.999965" ypos="-0.999966"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="STN to SUM STN Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="STN to SUM STN Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="NBinput">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="-0.25"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="2.5"/>
+                <yPos value="-4"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="85" green="170" blue="255"/>
+                <size value="1"/>
+                <tag value="4"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="GPe" size="6" url="STN_GP_MCTx_TRN.xml">
+            <Property name="W_1" dimension="?">
+                <FixedValue value="0.8"/>
+            </Property>
+            <Property name="W_2" dimension="?">
+                <FixedValue value="-1"/>
+            </Property>
+            <Property name="W_3" dimension="?"/>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="STN">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="0" showlabel="0"/>
+                    <start x="3.3337" y="-4.00243"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="8.5" ypos="-4"/>
+                            <C2 xpos="1.5" ypos="5.5"/>
+                            <end xpos="1.48962" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0.1"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="GPe to STN Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="GPe to STN Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_3">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="-0.2"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="GPi SNr">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="0" showlabel="0"/>
+                    <start x="1.66609" y="-4.00125"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="0.827098" ypos="-4.00125"/>
+                            <C2 xpos="0.810284" ypos="-4.02123"/>
+                            <end xpos="0.313509" ypos="-4.02122"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="GPe to GPi SNr Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="GPe to GPi SNr Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_2">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="-0.2"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-0.52"/>
+                <yPos value="-4.02"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="85" green="170" blue="255"/>
+                <size value="1"/>
+                <tag value="8"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="GPi SNr" size="6" url="STN_GP_MCTx_TRN.xml">
+            <Property name="W_1" dimension="?">
+                <FixedValue value="0.8"/>
+            </Property>
+            <Property name="W_2" dimension="?">
+                <FixedValue value="-0.4"/>
+            </Property>
+            <Property name="W_3" dimension="?">
+                <FixedValue value="-1"/>
+            </Property>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="VL thalamus">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="0" showlabel="0"/>
+                    <start x="-1.35333" y="-4.02002"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-8.52" ypos="-4.02002"/>
+                            <C2 xpos="-8.49751" ypos="0"/>
+                            <end xpos="-6.33101" ypos="5.60519e-45"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0.1"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="GPi SNr to VL thalamus Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="GPi SNr to VL thalamus Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="o_GPi">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="-0.2"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="1"/>
+                <yPos value="4"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="255" green="255" blue="255"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="INPUT" size="6" url="Null_input.xml"/>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="Striatum D1">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="0.166665" y="3.99846"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-1" ypos="3.99919"/>
+                            <C2 xpos="-1" ypos="2.5"/>
+                            <end xpos="-1" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="INPUT to Striatum D1 Synapse 0 weight_update" url="WU_passthrough.xml" input_src_port="output" input_dst_port="WUinput"/>
+                <LL:PostSynapse name="INPUT to Striatum D1 Synapse 0 postsynapse" url="PS_passthrough.xml" input_src_port="WUoutput" input_dst_port="PSinput" output_src_port="PSoutput" output_dst_port="in_1"/>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="STN">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="1" y="3.49949"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="1" ypos="2.49947"/>
+                            <C2 xpos="1" ypos="2"/>
+                            <end xpos="1" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="INPUT to STN Synapse 0 weight_update" url="WU_passthrough.xml" input_src_port="output" input_dst_port="WUinput"/>
+                <LL:PostSynapse name="INPUT to STN Synapse 0 postsynapse" url="PS_passthrough.xml" input_src_port="WUoutput" input_dst_port="PSinput" output_src_port="PSoutput" output_dst_port="in_1"/>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="Striatum D2">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="1.83333" y="3.99891"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="3" ypos="3.99921"/>
+                            <C2 xpos="3" ypos="2.5"/>
+                            <end xpos="3" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="INPUT to Striatum D2 Synapse 0 weight_update" url="WU_passthrough.xml" input_src_port="output" input_dst_port="WUinput"/>
+                <LL:PostSynapse name="INPUT to Striatum D2 Synapse 0 postsynapse" url="PS_passthrough.xml" input_src_port="WUoutput" input_dst_port="PSinput" output_src_port="PSoutput" output_dst_port="in_1"/>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="Motor Cortex">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="0.166665" y="4"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-3.5" ypos="4"/>
+                            <C2 xpos="-3.5005" ypos="3.74137"/>
+                            <end xpos="-3.5005" ypos="2.4995"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="INPUT to Motor Cortex Synapse 0 weight_update" url="WU_passthrough.xml" input_src_port="output" input_dst_port="WUinput"/>
+                <LL:PostSynapse name="INPUT to Motor Cortex Synapse 0 postsynapse" url="PS_passthrough.xml" input_src_port="WUoutput" input_dst_port="PSinput" output_src_port="PSoutput" output_dst_port="in_1"/>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="1"/>
+                <yPos value="-1.5"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="255" green="255" blue="255"/>
+                <size value="1"/>
+                <tag value="2"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="SUM STN" size="6" url="NB_passthrough.xml"/>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="GPe">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="1.49987" y="-1.99987"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="1.49988" ypos="-2.99988"/>
+                            <C2 xpos="2" ypos="-2.5"/>
+                            <end xpos="2" ypos="-3.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <AllToAllConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </AllToAllConnection>
+                <LL:WeightUpdate name="SUM STN to GPe Synapse 0 weight_update" url="WU_passthrough.xml" input_src_port="NBoutput" input_dst_port="WUinput"/>
+                <LL:PostSynapse name="SUM STN to GPe Synapse 0 postsynapse" url="PS_passthrough.xml" input_src_port="WUoutput" input_dst_port="PSinput" output_src_port="PSoutput" output_dst_port="in_1"/>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="GPi SNr">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="0.499906" y="-1.99991"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="0.499911" ypos="-2.99991"/>
+                            <C2 xpos="-0.020002" ypos="-2.52002"/>
+                            <end xpos="-0.020002" ypos="-3.52002"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <AllToAllConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </AllToAllConnection>
+                <LL:WeightUpdate name="SUM STN to GPi SNr Synapse 0 weight_update" url="WU_passthrough.xml" input_src_port="NBoutput" input_dst_port="WUinput"/>
+                <LL:PostSynapse name="SUM STN to GPi SNr Synapse 0 postsynapse" url="PS_passthrough.xml" input_src_port="WUoutput" input_dst_port="PSinput" output_src_port="PSoutput" output_dst_port="in_1"/>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-3.5"/>
+                <yPos value="2"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="85" green="170" blue="255"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="Motor Cortex" size="6" url="STN_GP_MCTx_TRN.xml">
+            <Property name="W_1" dimension="?">
+                <FixedValue value="0.5"/>
+            </Property>
+            <Property name="W_2" dimension="?">
+                <FixedValue value="1"/>
+            </Property>
+            <Property name="W_3" dimension="?"/>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="Striatum D1">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-2.66706" y="1.99961"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-1.50038" ypos="1.99962"/>
+                            <C2 xpos="-1.5" ypos="2"/>
+                            <end xpos="-1.5" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Motor Cortex to Striatum D1 Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Motor Cortex to Striatum D1 Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_2">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="STN">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-2.66688" y="1.99978"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="0.499791" ypos="1.99979"/>
+                            <C2 xpos="0.5" ypos="2"/>
+                            <end xpos="0.5" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Motor Cortex to STN Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Motor Cortex to STN Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_2">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="Striatum D2">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-2.66678" y="1.99988"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="2.49989" ypos="1.99989"/>
+                            <C2 xpos="2.5" ypos="2"/>
+                            <end xpos="2.5" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Motor Cortex to Striatum D2 Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Motor Cortex to Striatum D2 Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_2">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="VL thalamus">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-4.33333" y="2"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-5.5" ypos="2"/>
+                            <C2 xpos="-5.49779" ypos="2"/>
+                            <end xpos="-5.49767" ypos="0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0.1"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Motor Cortex to VL thalamus Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Motor Cortex to VL thalamus Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="o_MCtx">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="TRN">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-3" y="1.5"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-3" ypos="0.5"/>
+                            <C2 xpos="-3.0007" ypos="1.49965"/>
+                            <end xpos="-3.00052" ypos="-1.50045"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0.1"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Motor Cortex to TRN Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Motor Cortex to TRN Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_2">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="MCtx_OUTPUT">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-4" y="2.5"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-4" ypos="3.5"/>
+                            <C2 xpos="-4.00008" ypos="3.49996"/>
+                            <end xpos="-4.66676" ypos="3.49995"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="Motor Cortex to MCtx_OUTPUT Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="Motor Cortex to MCtx_OUTPUT Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="input">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-3.5"/>
+                <yPos value="-2"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="50" green="50" blue="50"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="TRN" size="6" url="STN_GP_MCTx_TRN.xml">
+            <Property name="W_1" dimension="?">
+                <FixedValue value="1"/>
+            </Property>
+            <Property name="W_2" dimension="?">
+                <FixedValue value="1"/>
+            </Property>
+            <Property name="W_3" dimension="?"/>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="SUM TRN">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-4.3325" y="-2.00113"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-5.28231" ypos="-2.00113"/>
+                            <C2 xpos="-4.28587" ypos="-2.00113"/>
+                            <end xpos="-4.67113" ypos="-2.00113"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="TRN to SUM TRN Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="TRN to SUM TRN Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="NBinput">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="VL thalamus">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="0" showlabel="0"/>
+                    <start x="-3.99935" y="-1.50104"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-3.99937" ypos="-0.50103"/>
+                            <C2 xpos="-4.99797" ypos="-1.5"/>
+                            <end xpos="-4.99804" ypos="-0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="TRN to VL thalamus Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="TRN to VL thalamus Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="o_TRN">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-5.5"/>
+                <yPos value="-2.8026e-45"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="85" green="170" blue="255"/>
+                <size value="1"/>
+                <tag value="2"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="VL thalamus" size="6" url="VL_thalamus.xml">
+            <Property name="W_MCtx_VL" dimension="?">
+                <FixedValue value="1"/>
+            </Property>
+            <Property name="W_GPi_VL" dimension="?">
+                <FixedValue value="-1"/>
+            </Property>
+            <Property name="W_TRN_within" dimension="?">
+                <FixedValue value="-0.1"/>
+            </Property>
+            <Property name="W_TRN_between" dimension="?">
+                <FixedValue value="-0.7"/>
+            </Property>
+            <Property name="trn_vec" dimension="?">
+                <FixedValue value="1"/>
+            </Property>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="Motor Cortex">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-4.9976" y="0.5"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-4.99786" ypos="1.5"/>
+                            <C2 xpos="-4" ypos="0.5"/>
+                            <end xpos="-4" ypos="1.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="VL thalamus to Motor Cortex Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="VL thalamus to Motor Cortex Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_2">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+        <LL:Projection dst_population="TRN">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="4" showlabel="0"/>
+                    <start x="-4.66454" y="5.60519e-45"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-3.49793" ypos="-2.8026e-45"/>
+                            <C2 xpos="-3.49976" ypos="-0.000832558"/>
+                            <end xpos="-3.49951" ypos="-1.50096"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <OneToOneConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0.1"/>
+                    </Delay>
+                </OneToOneConnection>
+                <LL:WeightUpdate name="VL thalamus to TRN Synapse 0 weight_update" url="Activation.xml" input_src_port="u" input_dst_port="u">
+                    <Property name="a" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:WeightUpdate>
+                <LL:PostSynapse name="VL thalamus to TRN Synapse 0 postsynapse" url="Ramp_output.xml" input_src_port="a" input_dst_port="a" output_src_port="o" output_dst_port="in_1">
+                    <Property name="e" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                    <Property name="o" dimension="?">
+                        <FixedValue value="0"/>
+                    </Property>
+                </LL:PostSynapse>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-5.5"/>
+                <yPos value="-2"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="255" green="255" blue="255"/>
+                <size value="1"/>
+                <tag value="4"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="SUM TRN" size="6" url="NB_passthrough.xml"/>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+        <LL:Projection dst_population="VL thalamus">
+            <LL:Annotation>
+                <SpineCreator>
+                    <DrawOptions style="0" showlabel="0"/>
+                    <start x="-6.00371" y="-1.50094"/>
+                    <curves>
+                        <curve>
+                            <C1 xpos="-6.00368" ypos="-1.00093"/>
+                            <C2 xpos="-5.99817" ypos="-1"/>
+                            <end xpos="-5.9982" ypos="-0.5"/>
+                        </curve>
+                    </curves>
+                </SpineCreator>
+            </LL:Annotation>
+            <LL:Synapse>
+                <AllToAllConnection>
+                    <Delay dimension="ms">
+                        <FixedValue value="0"/>
+                    </Delay>
+                </AllToAllConnection>
+                <LL:WeightUpdate name="SUM TRN to VL thalamus Synapse 0 weight_update" url="WU_passthrough.xml" input_src_port="NBoutput" input_dst_port="WUinput"/>
+                <LL:PostSynapse name="SUM TRN to VL thalamus Synapse 0 postsynapse" url="PS_passthrough.xml" input_src_port="WUoutput" input_dst_port="PSinput" output_src_port="PSoutput" output_dst_port="SUM_o_TRN"/>
+            </LL:Synapse>
+        </LL:Projection>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-5.5"/>
+                <yPos value="3.5"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="255" green="255" blue="255"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="MCtx_OUTPUT" size="6" url="Null_output.xml"/>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+    </LL:Population>
+</LL:SpineML>

@@ -39,13 +39,12 @@ services:
   spinecreator:
     command: bash
     container_name: mammalbot_spinecreator
-    # depends_on:
-    # - gazebo
-    # - roscore
+    depends_on:
+    - roscore
     environment:
     - MIRO_DIR_STATE=/tmp/miro2/state
     - MIRO_ROBOT_NAME=miro
-    - PYTHONPATH=/root/mdk/share/python:/root/mdk/catkin_ws/install/lib/python2.7/dist-packages:/opt/ros/melodic/lib/python2.7/dist-packages
+    - PYTHONPATH=/home/docker/mdk/share/python:/home/docker/mdk/catkin_ws/install/lib/python2.7/dist-packages:/opt/ros/melodic/lib/python2.7/dist-packages
     - ROS_IP=172.100.0.4
     - ROS_MASTER_URI=http://roscore:11311
     image: "tacd/spinecreator:ros"   
@@ -55,19 +54,19 @@ services:
         - spinecreator
         ipv4_address: 172.100.0.4
     tty: true
+    user: docker
     volumes:
     # Allow X server sharing to display Gazebo window
-    - ${XAUTHORITY}:/root/.Xauthority
     - /tmp/.X11-unix:/tmp/.X11-unix
-    # Shared MDK volume
-    - mdk:/root/mdk
     # Provide access to MammalBot directories
     - ./bindings:/usr/local/SystemML/Namespace/mammalbot
-    - ./models/spineml:/root/MammalBot
+    - ./models/spineml:/home/docker/MammalBot
     # Provide access to data output directory
-    - ./output:/root/SpineML_2_BRAHMS/temp
+    - ./output:/home/docker/SpineML_2_BRAHMS/temp
+    # Persistent shared MDK volume
+    - mdk:/home/docker/mdk
     # Peristent SpineML_2_BRAHMS data directory
-    - s2b:/root/SpineML_2_BRAHMS
+    - s2b:/home/docker/SpineML_2_BRAHMS
 
 networks:
   ros:

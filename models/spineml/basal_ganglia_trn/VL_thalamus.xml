@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<SpineML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.shef.ac.uk/SpineMLComponentLayer" xsi:schemaLocation="http://www.shef.ac.uk/SpineMLComponentLayer SpineMLComponentLayer.xsd">
+ <ComponentClass name="VL thalamus" type="neuron_body">
+  <Annotation>
+   <SpineCreator/>
+  </Annotation>
+  <Dynamics initial_regime="Regime">
+   <Regime name="Regime"/>
+   <Alias name="u" dimension="?">
+    <MathInline>o_MCtx * W_MCtx_VL + o_GPi * W_GPi_VL + o_TRN * W_TRN_within + temp * W_TRN_between</MathInline>
+   </Alias>
+   <Alias name="temp" dimension="?">
+    <MathInline>(SUM_o_TRN * trn_vec) - o_TRN</MathInline>
+   </Alias>
+  </Dynamics>
+  <AnalogReducePort name="SUM_o_TRN" reduce_op="+" dimension="?"/>
+  <AnalogSendPort name="u"/>
+  <AnalogReducePort name="o_TRN" reduce_op="+" dimension="?"/>
+  <AnalogReducePort name="o_MCtx" reduce_op="+" dimension="?"/>
+  <AnalogReducePort name="o_GPi" reduce_op="+" dimension="?"/>
+  <Parameter name="W_MCtx_VL" dimension="?"/>
+  <Parameter name="W_GPi_VL" dimension="?"/>
+  <Parameter name="W_TRN_within" dimension="?"/>
+  <Parameter name="W_TRN_between" dimension="?"/>
+  <Parameter name="trn_vec" dimension="?"/>
+ </ComponentClass>
+</SpineML>
