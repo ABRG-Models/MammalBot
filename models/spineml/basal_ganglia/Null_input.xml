@@ -7,10 +7,10 @@
   <Dynamics initial_regime="Regime">
    <Regime name="Regime"/>
    <Alias name="output" dimension="?">
-    <MathInline>experiment_input</MathInline>
+    <MathInline>input</MathInline>
    </Alias>
   </Dynamics>
   <AnalogSendPort name="output"/>
-  <AnalogReceivePort name="experiment_input" dimension="?"/>
+  <AnalogReceivePort name="input" dimension="?"/>
  </ComponentClass>
 </SpineML>

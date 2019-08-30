@@ -31,8 +31,8 @@ def brahms_process(persist, input):
 		# Component information
 		output['info'] = {}
 		output['info']['component'] = (0, 1)
-		output['info']['additional'] = ('Author=David Buxton\n')
-		output['info']['flags'] = (F_NOT_RATE_CHANGER)
+		output['info']['additional'] = 'Author=David Buxton\n'
+		output['info']['flags'] = F_NOT_RATE_CHANGER
 		
 		# OK
 		output['event']['response'] = C_OK
@@ -49,16 +49,27 @@ def brahms_process(persist, input):
 		# On first call
 		if input['event']['flags'] & F_FIRST_CALL:
 
-			# Initialise ROS nodes
-			persist['ros_test'] = rospy.Publisher("/basal_ganglia/ctx", String, queue_size=10)
-			rospy.init_node('spineml_bg_in', anonymous=True)
+			# Create output port with label 'bg_input'
+			# The number here must match the number of BG channels
+			persist['bg_input'] = brahms.operation(
+				persist['self'],
+				OPERATION_ADD_PORT,
+				'',
+				'std/2009/data/numeric',
+				'DOUBLE/REAL/6',
+				'bg_input'
+			)
 
-			# Access Ctx output
-			index = input['iif']['default']['index']['ctx_out']
+			# Initialise ROS nodes
+			persist['ros_bg'] = rospy.Publisher("/basal_ganglia", String, queue_size=10)
+			rospy.init_node('spineml_bg', anonymous=True)
+
+			# Access BG output
+			index = input['iif']['default']['index']['bg_output']
 			port = input['iif']['default']['ports'][index]
 
 			# Store data
-			persist['ctx_data'] = port['data']
+			persist['bg_output'] = port['data']
 
 			# Do nothing
 			pass
@@ -75,11 +86,18 @@ def brahms_process(persist, input):
 	# Switch on event type
 	elif input['event']['type'] == EVENT_RUN_SERVICE:
 
-		# DEBUG data
-		print(persist['ctx_data'])
+		# TODO: Create standalone Python action request programs for each action and put them into bg_input array
 
-		# TODO: Create standalone Python action request programs for each action
-		# TODO: Pass input salience of each action request to BG model
+		# Set input values
+		brahms.operation(
+			persist['self'],
+			OPERATION_SET_CONTENT,
+			persist['bg_input'],
+			np.array([0.7, 0.2, 0.5, 0.1, 0, 0], np.float64)
+		)
+
+		# Send output values to ROS
+		persist['ros_bg'].publish(str(persist['bg_output']))
 
 		# OK
 		output['event']['response'] = C_OK

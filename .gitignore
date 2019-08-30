@@ -1,2 +1,8 @@
 
 output/
+
+models/python/basal_ganglia/\.idea/
+
+models/python/basal_ganglia/venv/
+
+models/python/basal_ganglia/__pycache__/
