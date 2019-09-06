@@ -155,7 +155,7 @@ class BasalGanglia(object):
 
         return ramp_output
 
-    def step(self, c):
+    def update(self, c):
 
         # Outputs
         for pop in self.pop.keys():
