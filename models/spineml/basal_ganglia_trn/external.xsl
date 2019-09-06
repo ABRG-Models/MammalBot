@@ -18,18 +18,8 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 
 <!-- These are the external processes -->
 <Process>
-	<Name>BG_output</Name>
-	<Class>mammalbot/basal_ganglia/output</Class>
-	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
-		<m><xsl:value-of select="$spineml_output_dir"/></m>
-		<m>ExplicitEuler</m>
-	</State>
-	<Time><SampleRate><xsl:value-of select="$sampleRate"/></SampleRate></Time>
-</Process>
-
-<Process>
-	<Name>BG_input</Name>
-	<Class>mammalbot/basal_ganglia/input</Class>
+	<Name>BasalGanglia</Name>
+	<Class>mammalbot/basal_ganglia</Class>
 	<State c="z" a="output_data_path;simtk_integrator;" Format="DataML" Version="5" AuthTool="SystemML Toolbox" AuthToolVersion="0">
 		<m><xsl:value-of select="$spineml_output_dir"/></m>
 		<m>ExplicitEuler</m>
@@ -40,7 +30,7 @@ xmlns:fn="http://www.w3.org/2005/xpath-functions" exclude-result-prefixes="fn">
 <!-- These are the links between external and SpineML processes (or between external processes) -->
 <Link>
 	<Src>MCtx_OUTPUT&gt;output</Src>
-	<Dst>BG_output&lt;&lt;&lt;mctx_out</Dst>
+	<Dst>BasalGanglia&lt;&lt;&lt;mctx_out</Dst>
 	<Lag>0</Lag>
 </Link>
 
