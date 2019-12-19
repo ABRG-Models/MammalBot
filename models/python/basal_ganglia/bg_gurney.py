@@ -14,139 +14,125 @@ class BasalGanglia(object):
         #     'Th_d' : False,   # VLT to dorsal striatum connectivity?
         # }
 
-        # Model parameters
-        # Dopamine
-        # self.da = {
-        #     # Tonic
-        #     'dMSN_d': 0.2,
-        #     'iMSN_d': -0.2,
-        #     # 'VTA'   : {
-        #     #     # TODO: Find good values for these, currently totally made up
-        #     #     'dMSN_v': 0.5,
-        #     #     'iMSN_v': 0.5,
-        #     # }
-        # }
-
         # Artificial parameters
         # Gain
         k = 25
         dt = 0.01
         self.decay_constant = math.exp(-k * dt)
         # Slope
-        self.m = 1              # Humphries & Gurney (2002)
+        self.m = 1  # Humphries & Gurney (2002)
 
         # Define the canonical BG structure
-        # Weights are defined as {'FROM': W}
+        # Weights are defined as 'TO': {'W': {'FROM': <WEIGHT>}}
         bg_core = {
             # Principal BG populations
-            'dMSN': {
+            'dMSN'   : {
                 'Name': 'Direct-pathway MSNs',
                 'e'   : 0.2,
                 'DA'  : 1,  # INVENTED
                 'W'   : {
-                    # TODO: Add DA modulation
-                    'Inp': 0.5,     # Humphries & Gurney (2002)
-                    'Ctx': 0.5,     # Humphries & Gurney (2002)
-                    # 'Inp': 0.3,
-                    # 'Ctx': 0.3,
-                    # 'DA' : 0.8,       # INVENTED
+                    'Inp': 0.5,  # Humphries & Gurney (2002)
+                    'Ctx': 0.5,  # Humphries & Gurney (2002)
                 },
             },
-            'iMSN': {
+            'iMSN'   : {
                 'Name': 'Indirect-pathway MSNs',
                 'e'   : 0.2,
                 'DA'  : -1,  # INVENTED
                 'W'   : {
-                    'Inp': 0.5,     # Humphries & Gurney (2002)
-                    'Ctx': 0.5,     # Humphries & Gurney (2002)
-                    # 'Inp': 0.3,
-                    # 'Ctx': 0.3,
-                    # 'DA' : -0.8,       # INVENTED
+                    'Inp': 0.5,  # Humphries & Gurney (2002)
+                    'Ctx': 0.5,  # Humphries & Gurney (2002)
                 },
             },
-            'STN' : {
+            'STN'    : {
                 'Name': 'Subthalamic nucleus',
                 'e'   : -0.25,
                 'W'   : {
-                    'Inp': 0.5,     # Humphries & Gurney (2002)
-                    'Ctx': 0.5,     # Humphries & Gurney (2002)
-                    'GPe': -1,      # Gurney, Prescott, & Redgrave (2001)
-                    'PPn': 1,       # INVENTED (Duplicate of DA projection)
+                    'Inp': 0.5,  # Humphries & Gurney (2002)
+                    'Ctx': 0.5,  # Humphries & Gurney (2002)
+                    'GPe': -1,  # Gurney, Prescott, & Redgrave (2001)
+                    'PPn': 1,  # INVENTED (Duplicate of DA projection)
                 },
             },
-            'GPe' : {
+            'GPe'    : {
                 'Name': 'Globus pallidus (external)',
                 'e'   : -0.2,
                 'W'   : {
-                    'iMSN': -1,     # Gurney, Prescott, & Redgrave (2001)
-                    'STN' : 0.8,    # Humphries & Gurney (2002)
+                    'iMSN': -1,  # Gurney, Prescott, & Redgrave (2001)
+                    'STN' : 0.8,  # Humphries & Gurney (2002)
                 },
             },
-            'GPi_SNr' : {
+            'GPi_SNr': {
                 'Name': 'Globus pallidus (internal) / Substantia nigra pars reticulata',
                 'e'   : -0.2,
                 'W'   : {
-                    'dMSN': -1,     # Gurney, Prescott, & Redgrave (2001)
-                    'STN' : 0.8,    # Humphries & Gurney (2002)
-                    'GPe' : -0.4,   # Humphries & Gurney (2002)
+                    'dMSN': -1,  # Gurney, Prescott, & Redgrave (2001)
+                    'STN' : 0.8,  # Humphries & Gurney (2002)
+                    'GPe' : -0.4,  # Humphries & Gurney (2002)
                 },
             },
             # Additional populations
-            'Ctx' : {
+            'Ctx'    : {
                 'Name': 'Cortex',
                 'e'   : 0,
                 'W'   : {
-                    # 'Inp' : 1,      # Humphries & Gurney (2002)
-                    # 'Thal': 1,      # Humphries & Gurney (2002)
+                    # 'Inp' : 1,        # Humphries & Gurney (2002)
+                    # 'Thal': 1,        # Humphries & Gurney (2002)
                     'Inp' : 0.5,
                     'Thal': 0.5,
                 },
             },
-            'Thal': {
+            'Thal'   : {
                 'Name': 'Thalamus',
                 'e'   : 0,
                 'W'   : {
                     'GPi_SNr': -1,  # Humphries & Gurney (2002)
-                    'Ctx': 1,       # Humphries & Gurney (2002)
+                    'Ctx'    : 1,  # Humphries & Gurney (2002)
                 },
             },
-            # "There is evidence for separate cholinergic PPn populations projecting to SNc and VTA"
+            # Justification for creating ventral and dorsal PPn populations:
             # "There is evidence that anterior cholinergic PPn neurons preferentially project to the SNc,
             #  whereas posterior cholinergic PPn cells preferentially project to the VTA (Oakman et al., 1995)."
-            # Humphries and Prescott (2010), pp 389
-            'PPn': {
+            # - Humphries and Prescott (2010), pp 392
+            'PPn'    : {
                 'Name': 'Pedunculopontine nucleus',
                 'e'   : -0.15,
                 'W'   : {
-                    'GPe'    : -0.5,    # Humphries & Prescott (2010)
-                    # 'GPe'    : -0.3,  # Humphries & Prescott (2010)
-                    'STN'    : 0.8,     # Made up by me (copied from other STN projections)
-                    'GPi_SNr': -0.5,    # Made up by me
+                    'GPe'    : -0.5,  # Humphries & Prescott (2010)
+                    # 'GPe'    : -0.3
+                    'STN'    : 0.8,  # Made up by me (copied from other STN projections)
+                    'GPi_SNr': -0.5,  # Made up by me
                 }
             },
-            'VTA_SNc'  : {
+            'VTA_SNc': {
                 'Name': 'Ventral tegmental area / Substantia nigra pars compacta',
-                'e'   : -0.075,         # Humphries & Prescott (2010)
+                'e'   : -0.075,  # Humphries & Prescott (2010)
                 'W'   : {
-                    'dMSN': -1,         # INVENTED
-                    'iMSN': -1,         # INVENTED
-                    # 'PPn': 1,  # Humphries & Prescott (2010) (to VTA)
+                    'dMSN': -1,  # INVENTED
+                    'iMSN': -1,  # INVENTED
                 },
             },
-            'DA'    : {
+            'DA'     : {
                 'Name': 'Dopamine neurons',
                 'e'   : -0.2,
                 'W'   : {
-                    'VTA_SNc': -1,      # INVENTED
-                    'PPn'    : 1,       # Humphries & Prescott (2010) (to VTA)
+                    'VTA_SNc': -1,  # INVENTED
+                    'PPn'    : 1,  # Humphries & Prescott (2010) (to VTA)
                 },
             },
         }
 
-        # Create dorsal and ventral BG structures
+        # Create dorsal and ventral BG structures from core layout
         self.pop = {
             'Dorsal' : copy.deepcopy(bg_core),
             'Ventral': copy.deepcopy(bg_core),
+        }
+
+        # Define lateral hypothalamus
+        self.pop['Ventral']['LH'] = {
+            'Name': 'Lateral hypothalamus',
+            'e'   : 0,
+            'W'   : {},
         }
 
         # Region-specific modifications
@@ -156,37 +142,9 @@ class BasalGanglia(object):
         }
 
         # Lateral hypothalamus to ventral SNc weight
-        self.pop['Ventral']['VTA_SNc']['W']['LH'] = 1    # TODO: Calibrate
+        self.pop['Ventral']['DA']['W']['LH'] = 1  # TODO: Calibrate
 
         # self.pop['Dorsal']['VTA_SNc']['W']['Ventral']['LH'] = 1  # TODO: Calibrate
-
-        # Define lateral hypothalamus
-        self.pop['Ventral']['LH'] = {
-            'Name': 'Lateral hypothalamus',
-            'e'   : 0,
-            'W'   : {},
-        }
-
-        # # PPn
-        # self.pop['Ventral']['PPn'] = {
-        #     'Name': 'Pendunculopontine nucleus',
-        #     'e'   : -0.15,      # Humphries & Prescott (2010)
-        #     'W'   : {
-        #         'GPe': -0.5     # Humphries & Prescott (2010)
-        #     }
-        # }
-
-        # self.pop['Ventral']['PPn'] = {
-        #     'Name': 'Pedunculopontine nucleus',
-        #     'e'   : -0.15,
-        #     'W'   : {
-        #         'GPe'    : -0.5,        # Humphries & Prescott (2010)
-        #         'STN'    : 0.8,
-        #         'GPi_SNr': -0.5,        # Made up by me
-        #     }
-        # }
-
-        # TODO: Modify structures to match dorsal / ventral anatomy and connections
 
         # Input, activity and output arrays
         self.input = np.zeros(channels)
@@ -215,15 +173,13 @@ class BasalGanglia(object):
         u = 0
 
         for src_name, src_weight in self.pop[dst_region][dst_pop]['W'].items():
-
             if src_name is not 'Inp':
-                # TODO: Connections from external regions need testing
+
                 # Special case: Input from remote region
                 if src_name in self.pop.keys():
                     src_region = src_name
 
                     for remote_name, remote_weight in self.pop[dst_region][dst_pop]['W'][src_region].items():
-
                         remote_output = self.pop[src_region][remote_name]['o']
                         u = u + remote_weight * remote_output
 
@@ -232,7 +188,7 @@ class BasalGanglia(object):
                     src_region = dst_region
                     src_output = self.pop[src_region][src_name]['o']
 
-                    # Special case: STN
+                    # Special case: STN projections are not channel specific
                     if src_name == 'STN':
                         u = u + src_weight * sum(src_output)
 
@@ -253,41 +209,31 @@ class BasalGanglia(object):
 
         # Dopamine modifier
         if 'DA' in self.pop[dst_region][dst_pop].keys():
-            print(dst_region + ' ' + dst_pop + ' DA modification:')
-            print('DA activation = ' + str(self.pop[dst_region]['DA']['o']) + ' * ' + str(self.pop[dst_region][dst_pop]['DA']))
-            print('u = ' + str(u))
+            # print(dst_region + ' ' + dst_pop + ' DA modification:')
+            # print('DA activation = ' + str(self.pop[dst_region]['DA']['o']) + ' * ' + str(self.pop[dst_region][dst_pop]['DA']))
+            # print('u = ' + str(u))
 
             u = u * (1 + self.pop[dst_region]['DA']['o'] * self.pop[dst_region][dst_pop]['DA'])
 
-            print('Now u = ' + str(u))
+            # print('Now u = ' + str(u))
 
         return u
 
     def step(self, c):
-        # Input
         self.input = c
 
-        # TODO: Update all step routines to operate across all BG substructures
-
-        # Outputs
         for region in self.pop.keys():
             for p in self.pop[region].keys():
+                # Outputs
                 self.pop[region][p]['o'] = self.ramp(self.pop[region][p]['a'], self.pop[region][p]['e'], self.m)
 
-        # FIXED LH OUTPUT FOR TESTING
-        self.pop['Ventral']['LH']['o'] = np.array([1, 1, 1, 0, 0, 0])
+                # FIXED LH OUTPUT FOR TESTING ONLY
+                self.pop['Ventral']['LH']['o'] = np.array([1, 1, 1, 0, 0, 0])
 
-        # Recovery variables
-        for region in self.pop.keys():
-            for p in self.pop[region].keys():
+                # Recovery variables
                 self.pop[region][p]['u'] = self.activation(region, p)
 
-        # Leaky integrator activation
-        for region in self.pop.keys():
-            for p in self.pop[region].keys():
-                # Eq. 1 from Gurney, Prescott, & Redgrave (2001b)
+                # Leaky integrator activation
+                # (Eq. 1 from Gurney, Prescott, & Redgrave (2001b))
                 self.pop[region][p]['a'] = (self.pop[region][p]['a'] - self.pop[region][p]['u']) \
                                            * self.decay_constant + self.pop[region][p]['u']
-
-                if p is 'dMSN':
-                    print(region + ' ' + p + ' a: ' + str(self.pop[region][p]['a']))

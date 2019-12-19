@@ -14,13 +14,13 @@ BG_REGIONS = ['Ventral', 'Dorsal']
 PLOT_LENGTH = 1000
 PLOT_COLOURS = ('r', 'g', 'b', 'c', 'm', 'y', 'w')
 
-FIXED_INPUTS = True
+FIXED_INPUTS = False
 BG_INPUTS = {
     0: {
-        'Onset'    : 1,
+        'Onset'    : 0.5,
         # 'Size'     : 0.4,
         'Size'     : 0.6,
-        'Offset'   : 2,
+        'Offset'   : 1,
         # 'Transient': {
         #     'Onset' : 3,
         #     'Offset': 4,
@@ -28,9 +28,9 @@ BG_INPUTS = {
         # },
     },
     4: {
-        'Onset' : 3,
+        'Onset' : 0.6,
         'Size'  : 0.6,
-        'Offset': 4,
+        'Offset': 1.1,
     },
 }
 
@@ -163,11 +163,7 @@ class Window(QWidget):
                     self.data[p][n][-1] = self.inputs[n].item()
                 else:
                     # item() needed to convert numpy.float64 to native Python float
-                    # self.data[p][n][-1] = self.bg.pop[p]['o'][n].item()
-                    # self.data[p][n][-1] = self.bg.pop['Ventral'][p]['o'][n].item()
                     self.data[p][n][-1] = self.bg.pop[reg][pop]['o'][n].item()
-                    # self.data[p]['Region']
-                    # self.data[pop][n][-1] = self.bg.pop[pop]['v'][n].item()
 
                 self.plot[p][n].setData(self.data[p][n])
                 # self.plot[pop][n].setPos(self.ptr, 0)
