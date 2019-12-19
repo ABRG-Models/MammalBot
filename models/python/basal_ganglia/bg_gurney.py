@@ -35,231 +35,32 @@ class BasalGanglia(object):
         # Slope
         self.m = 1              # Humphries & Gurney (2002)
 
-        # Weights, defined as 'TO': {'FROM': W}
-        # Not defining optional extras right now
-        # self.W = {
-        #     # Dorsal BG
-        #     'dMSN_d': {
-        #         'Inp': 0.5,     # Humphries & Gurney (2002)
-        #         'Ctx_d': 0.5,   # Humphries & Gurney (2002)
-        #         # 'Th_d': 0.4,
-        #     },
-        #     'iMSN_d': {
-        #         'Inp': 0.5,     # Humphries & Gurney (2002)
-        #         'Ctx_d': 0.5,   # Humphries & Gurney (2002)
-        #         # 'Th_d': 0.4,
-        #     },
-        #     'STN_d'   : {
-        #         'Inp': 0.5,     # Humphries & Gurney (2002)
-        #         'Ctx_d': 0.5,   # Humphries & Gurney (2002)
-        #         'GPe': -1,      # Gurney, Prescott, & Redgrave (2001)
-        #     },
-        #     'GPe'   : {
-        #         'iMSN_d': -1,   # Gurney, Prescott, & Redgrave (2001)
-        #         'STN_d' : 0.8,  # Humphries & Gurney (2002)
-        #     },
-        #     'GPi'   : {
-        #         'dMSN_d': -1,   # Gurney, Prescott, & Redgrave (2001)
-        #         'STN_d' : 0.8,  # Humphries & Gurney (2002)
-        #         'GPe'   : -0.4, # Humphries & Gurney (2002)
-        #     },
-        #     # TODO: Verify SNc connectivity, distinct from VTA?
-        #     # TODO: Only patch projects to SNc
-        #     'SNc'   : {
-        #         'dMSN_d': -1,
-        #         'dMSN_v': -1,
-        #         # 'PPn'   : 1,
-        #         # 'VP': -0.5,
-        #     },
-        #     # # Ventral BG
-        #     # 'dMSN_v': {
-        #     #     # TODO: Add ventral cortex connection
-        #     #     'Inp': 0.25,
-        #     # },
-        #     # 'iMSN_v': {
-        #     #     # TODO: Add ventral cortex connection
-        #     #     'Inp': 0.35,
-        #     # },
-        #     # 'VP'    : {
-        #     #     'iMSN_v': -1,
-        #     # },
-        #     # 'PPn'   : {
-        #     #     'VP': -0.5,
-        #     # },
-        #     # 'VTA'   : {
-        #     #     'dMSN_v': -1,
-        #     #     'PPn'   : 1,
-        #     #     'VP'    : -0.5,
-        #     # },
-        #     # Ventral BG
-        #     'dMSN_v': {
-        #         'Inp': 0.5,
-        #         'Ctx_v': 0.5,
-        #     },
-        #     'iMSN_v': {
-        #         'Inp': 0.5,
-        #         'Ctx_v': 0.5,
-        #     },
-        #     'STN_v': {
-        #         'Inp'  : 0.5,
-        #         'Ctx_v': 0.5,
-        #         'VP'  : -1,
-        #     },
-        #     'VP'    : {
-        #         'iMSN_v': -1,   # Humphries & Prescott (2010)
-        #         'STN_v': 0.8,
-        #     },
-        #     'PPn'   : {
-        #         'VP': -0.5,     # Humphries & Prescott (2010)
-        #         'STN_v': 0.8,
-        #         'SNr'  : -0.5,  # Made up by me
-        #     },
-        #     'SNr'   : {
-        #         'dMSN_v': -1,
-        #         'STN_v' : 0.8,
-        #         'VP'   : -0.4,
-        #     },
-        #     'VTA'   : {
-        #         'dMSN_v': -1,   # Humphries & Prescott (2010)
-        #         'PPn'   : 1,    # Humphries & Prescott (2010)
-        #         'VP'    : -0.5, # Humphries & Prescott (2010)
-        #     },
-        #     # Other populations
-        #     'Th_d'   : {
-        #         'GPi': -1,
-        #         'Ctx_d': 1,
-        #         'TRN': {
-        #             'between': -0.7,
-        #             'within' : -0.1,
-        #         },
-        #     },
-        #     'TRN'   : {
-        #         'Ctx_d': 1,
-        #         'Th_d': 1,
-        #     },
-        #     'Ctx_d'   : {
-        #         # 'Inp': 0.5,
-        #         'Inp': 1,
-        #         'Th_d': 1,
-        #     },
-        # }
-
-        # # Modify weights to exclude populations
-        # if not self.opt['TRN']:
-        #     self.W['TRN']['between'] = 0
-        #     self.W['TRN']['within'] = 0
-        #
-        # if not self.opt['STR']:
-        #     self.W['dMSN-d']['dMSN-d'] = 0
-        #     self.W['dMSN-d']['iMSN-d'] = 0
-        #     self.W['iMSN-d']['dMSN-d'] = 0
-        #     self.W['iMSN-d']['iMSN-d'] = 0
-        #
-        # if not self.opt['Th_d']:
-        #     self.W['Th_d']['dMSN-d'] = 0
-        #     self.W['Th_d']['iMSN-d'] = 0
-        #
-        # if not self.opt['Loop']:
-        #     self.W['Ctx_d']['dMSN-d'] = 0
-        #     self.W['Ctx_d']['iMSN-d'] = 0
-        #     self.W['Ctx_d']['STN_d'] = 0
-
-        # TODO: Finish adding ventral BG to loop model
-        # TODO: Integrate dopamine function
-        # TODO: Unify pallidum / pallidus naming convention
-
-        # # Populations with offset values
-        # self.pop = {
-        #     # Dorsal populations from Humphries & Gurney (2002)
-        #     'dMSN_d': {
-        #         'Name': 'Direct-pathway MSNs (dorsal)',
-        #         'e'   : 0.2
-        #     },
-        #     'iMSN_d': {
-        #         'Name': 'Indirect-pathway MSNs (dorsal)',
-        #         'e'   : 0.2
-        #     },
-        #     'STN_d': {
-        #         'Name': 'Subthalamic nucleus',
-        #         'e'   : -0.25
-        #     },
-        #     'GPe': {
-        #         'Name': 'Globus pallidus (external)',
-        #         'e'   : -0.2
-        #     },
-        #     'GPi': {
-        #         'Name': 'Globus pallidus (internal)',
-        #         'e'   : -0.2
-        #     },
-        #     # SNc invented by me
-        #     'SNc': {
-        #         'Name': 'Substantia nigra pars compacta',
-        #         # TODO: Check / verify SNc offset value (curently matching VTA)
-        #         'e'   : -0.075
-        #     },
-        #     # Ventral populations from Humphries & Prescott (2010)
-        #     #  https://www.sciencedirect.com/science/article/pii/S030100820900183X#app3
-        #     'dMSN_v': {
-        #         'Name': 'Direct-pathway MSNs (ventral)',
-        #         'e'   : 0.2
-        #     },
-        #     'iMSN_v': {
-        #         'Name': 'Indirect-pathway MSNs (ventral)',
-        #         'e'   : 0.2
-        #     },
-        #     'PPn': {
-        #         'Name': 'Pedunculopontine nucleus',
-        #         'e'   : -0.15
-        #     },
-        #     'VP': {
-        #         'Name': 'Ventral pallidum',
-        #         'e'   : -0.2
-        #     },
-        #     'VTA': {
-        #         'Name': 'Ventral tegmental area',
-        #         'e'   : -0.075
-        #     },
-        #     # Non-BG populations
-        #     'Ctx_d': {
-        #         'Name': 'Motor cortex',
-        #         'e'   : 0
-        #     },
-        #     'TRN': {
-        #         'Name': 'Thalamic reticular nucleus',
-        #         'e'   : 0
-        #     },
-        #     'Th_d': {
-        #         'Name': 'Ventrolateral thalamus',
-        #         'e'   : 0
-        #     },
-        # }
-
         # Define the canonical BG structure
+        # Weights are defined as {'FROM': W}
         bg_core = {
             # Principal BG populations
             'dMSN': {
                 'Name': 'Direct-pathway MSNs',
                 'e'   : 0.2,
-                'DA'  : 0.8,  # INVENTED
+                'DA'  : 1,  # INVENTED
                 'W'   : {
                     # TODO: Add DA modulation
-                    # 'Inp': 0.5,     # Humphries & Gurney (2002)
-                    # 'Ctx': 0.5,     # Humphries & Gurney (2002)
-                    'Inp': 0.3,
-                    'Ctx': 0.3,
+                    'Inp': 0.5,     # Humphries & Gurney (2002)
+                    'Ctx': 0.5,     # Humphries & Gurney (2002)
+                    # 'Inp': 0.3,
+                    # 'Ctx': 0.3,
                     # 'DA' : 0.8,       # INVENTED
                 },
             },
             'iMSN': {
                 'Name': 'Indirect-pathway MSNs',
                 'e'   : 0.2,
-                'DA'  : -0.8,  # INVENTED
+                'DA'  : -1,  # INVENTED
                 'W'   : {
-                    # TODO: Add DA modulation (or done separately?)
-                    # 'Inp': 0.5,     # Humphries & Gurney (2002)
-                    # 'Ctx': 0.5,     # Humphries & Gurney (2002)
-                    'Inp': 0.3,
-                    'Ctx': 0.3,
+                    'Inp': 0.5,     # Humphries & Gurney (2002)
+                    'Ctx': 0.5,     # Humphries & Gurney (2002)
+                    # 'Inp': 0.3,
+                    # 'Ctx': 0.3,
                     # 'DA' : -0.8,       # INVENTED
                 },
             },
@@ -305,17 +106,20 @@ class BasalGanglia(object):
                 'Name': 'Thalamus',
                 'e'   : 0,
                 'W'   : {
-                    'GPi_SNr': -1,      # Humphries & Gurney (2002)
+                    'GPi_SNr': -1,  # Humphries & Gurney (2002)
                     'Ctx': 1,       # Humphries & Gurney (2002)
                 },
             },
             # "There is evidence for separate cholinergic PPn populations projecting to SNc and VTA"
+            # "There is evidence that anterior cholinergic PPn neurons preferentially project to the SNc,
+            #  whereas posterior cholinergic PPn cells preferentially project to the VTA (Oakman et al., 1995)."
             # Humphries and Prescott (2010), pp 389
             'PPn': {
                 'Name': 'Pedunculopontine nucleus',
                 'e'   : -0.15,
                 'W'   : {
                     'GPe'    : -0.5,    # Humphries & Prescott (2010)
+                    # 'GPe'    : -0.3,  # Humphries & Prescott (2010)
                     'STN'    : 0.8,     # Made up by me (copied from other STN projections)
                     'GPi_SNr': -0.5,    # Made up by me
                 }
@@ -326,6 +130,7 @@ class BasalGanglia(object):
                 'W'   : {
                     'dMSN': -1,         # INVENTED
                     'iMSN': -1,         # INVENTED
+                    # 'PPn': 1,  # Humphries & Prescott (2010) (to VTA)
                 },
             },
             'DA'    : {
@@ -351,10 +156,9 @@ class BasalGanglia(object):
         }
 
         # Lateral hypothalamus to ventral SNc weight
-        self.pop['Ventral']['VTA_SNc']['W']['LH'] = 0    # TODO: Calibrate
+        self.pop['Ventral']['VTA_SNc']['W']['LH'] = 1    # TODO: Calibrate
 
-        # # PPn to DA weight
-        # self.pop['Ventral']['DA']['W']['PPn'] = 1
+        # self.pop['Dorsal']['VTA_SNc']['W']['Ventral']['LH'] = 1  # TODO: Calibrate
 
         # Define lateral hypothalamus
         self.pop['Ventral']['LH'] = {
@@ -372,15 +176,15 @@ class BasalGanglia(object):
         #     }
         # }
 
-        self.pop['Ventral']['PPn'] = {
-            'Name': 'Pedunculopontine nucleus',
-            'e'   : -0.15,
-            'W'   : {
-                'GPe': -0.5,        # Humphries & Prescott (2010)
-                'STN': 0.8,
-                'GPi_SNr': -0.5,        # Made up by me
-            }
-        }
+        # self.pop['Ventral']['PPn'] = {
+        #     'Name': 'Pedunculopontine nucleus',
+        #     'e'   : -0.15,
+        #     'W'   : {
+        #         'GPe'    : -0.5,        # Humphries & Prescott (2010)
+        #         'STN'    : 0.8,
+        #         'GPi_SNr': -0.5,        # Made up by me
+        #     }
+        # }
 
         # TODO: Modify structures to match dorsal / ventral anatomy and connections
 
@@ -484,3 +288,6 @@ class BasalGanglia(object):
                 # Eq. 1 from Gurney, Prescott, & Redgrave (2001b)
                 self.pop[region][p]['a'] = (self.pop[region][p]['a'] - self.pop[region][p]['u']) \
                                            * self.decay_constant + self.pop[region][p]['u']
+
+                if p is 'dMSN':
+                    print(region + ' ' + p + ' a: ' + str(self.pop[region][p]['a']))
