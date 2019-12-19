@@ -8,28 +8,29 @@ from bg_gurney import BasalGanglia
 
 # Set fixed values
 BG_CHANNELS: int = 6
-BG_PLOTS = ['Inp', 'dMSN', 'GPi_SNr', 'VTA_SNc', 'DA', 'Ctx']
+BG_PLOTS = ['Inp', 'dMSN', 'iMSN', 'PPn', 'VTA_SNc', 'DA', 'Ctx']
 BG_REGIONS = ['Ventral', 'Dorsal']
 # BG_PLOTS = ['Input', 'NAc', 'STNv', 'SNr', 'DM', 'PL']
 PLOT_LENGTH = 1000
 PLOT_COLOURS = ('r', 'g', 'b', 'c', 'm', 'y', 'w')
 
-FIXED_INPUTS = False
+FIXED_INPUTS = True
 BG_INPUTS = {
     0: {
         'Onset'    : 1,
-        'Size'     : 0.4,
-        'Offset'   : 5,
-        'Transient': {
-            'Onset' : 3,
-            'Offset': 4,
-            'Size'  : 0.2,
-        },
+        # 'Size'     : 0.4,
+        'Size'     : 0.6,
+        'Offset'   : 2,
+        # 'Transient': {
+        #     'Onset' : 3,
+        #     'Offset': 4,
+        #     'Size'  : 0.2,
+        # },
     },
-    1: {
-        'Onset' : 2,
+    4: {
+        'Onset' : 3,
         'Size'  : 0.6,
-        'Offset': 5,
+        'Offset': 4,
     },
 }
 
