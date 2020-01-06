@@ -7,30 +7,30 @@ from PyQt5.QtWidgets import (
 from bg_gurney import BasalGanglia
 
 # Set fixed values
-BG_CHANNELS: int = 6
+BG_CHANNELS: int = 2
 BG_PLOTS = ['Inp', 'dMSN', 'iMSN', 'PPn', 'VTA_SNc', 'DA', 'Ctx']
-BG_REGIONS = ['Ventral', 'Dorsal']
+BG_REGIONS = ['Ventral']
 # BG_PLOTS = ['Input', 'NAc', 'STNv', 'SNr', 'DM', 'PL']
 PLOT_LENGTH = 1000
 PLOT_COLOURS = ('r', 'g', 'b', 'c', 'm', 'y', 'w')
 
-FIXED_INPUTS = False
+FIXED_INPUTS = True
 BG_INPUTS = {
     0: {
         'Onset'    : 0.5,
         # 'Size'     : 0.4,
         'Size'     : 0.6,
-        'Offset'   : 1,
+        'Offset'   : 2,
         # 'Transient': {
         #     'Onset' : 3,
         #     'Offset': 4,
         #     'Size'  : 0.2,
         # },
     },
-    4: {
+    1: {
         'Onset' : 0.6,
         'Size'  : 0.6,
-        'Offset': 1.1,
+        'Offset': 2.1,
     },
 }
 
@@ -75,7 +75,7 @@ class Window(QWidget):
                 else:
                     col = 3
 
-                grid.addWidget(self.create_plots(x, y), y + 1, col, 1, 3)    # TODO: Tidy up these columns a bit
+                grid.addWidget(self.create_plots(x, y), y + 1, col, 1, 2)    # TODO: Tidy up these columns a bit
                 for i in range(BG_CHANNELS):
                     self.data[pop][i] = np.zeros(PLOT_LENGTH)
 
