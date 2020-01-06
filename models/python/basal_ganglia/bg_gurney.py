@@ -244,8 +244,8 @@ class BasalGanglia(object):
                 self.pop[region][p]['o'] = self.ramp(self.pop[region][p]['a'], self.pop[region][p]['e'], self.m)
 
                 # FIXED LH OUTPUT FOR TESTING ONLY
-                self.pop['Ventral']['LH_GABA']['o'] = np.array([1, 1, 1, 0, 0, 0])
-                self.pop['Ventral']['LH_GLU']['o'] = np.array([0, 0, 0, 1, 1, 1])
+                self.pop['Ventral']['LH_GABA']['o'] = np.array([1, 0])
+                self.pop['Ventral']['LH_GLU']['o'] = np.array([0, 1])
 
                 # Recovery variables
                 self.pop[region][p]['u'] = self.activation(region, p)

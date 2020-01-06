@@ -1,0 +1,3 @@
+[submodule "models/python/miro_functions"]
+	path = models/python/miro_functions
+	url = git@github.com:MiRo-projects/basic_functions.git
