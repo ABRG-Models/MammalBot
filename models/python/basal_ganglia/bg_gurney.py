@@ -247,8 +247,8 @@ class BasalGanglia(object):
 
                 # FIXED LH OUTPUT FOR TESTING ONLY
                 # TODO: Ensure LH input is to channel groups (1,2) and (3,4) to represent APPROACH and AVOID
-                self.pop['Ventral']['LH_GABA']['o'] = np.array([1, 0, 0, 0])
-                self.pop['Ventral']['LH_GLU']['o'] = np.array([0, 1, 0, 0])
+                self.pop['Ventral']['LH_GABA']['o'] = np.array([0, 0, 1, 1])
+                self.pop['Ventral']['LH_GLU']['o'] = np.array([1, 1, 0, 0])
 
                 # Post-synaptic potential
                 self.pop[region][p]['u'] = self.activation(region, p)
