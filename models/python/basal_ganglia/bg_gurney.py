@@ -237,6 +237,7 @@ class BasalGanglia(object):
         return u
 
     def step(self, c):
+        # TODO: Ensure sensory input is to channel groups (1,3) and (2,4) to represent ENEMY and FRIEND
         self.input = c
 
         for region in self.pop.keys():
@@ -245,8 +246,9 @@ class BasalGanglia(object):
                 self.pop[region][p]['o'] = self.ramp(self.pop[region][p]['a'], self.pop[region][p]['e'], self.m)
 
                 # FIXED LH OUTPUT FOR TESTING ONLY
-                self.pop['Ventral']['LH_GABA']['o'] = np.array([1, 0])
-                self.pop['Ventral']['LH_GLU']['o'] = np.array([0, 1])
+                # TODO: Ensure LH input is to channel groups (1,2) and (3,4) to represent APPROACH and AVOID
+                self.pop['Ventral']['LH_GABA']['o'] = np.array([1, 0, 0, 0])
+                self.pop['Ventral']['LH_GLU']['o'] = np.array([0, 1, 0, 0])
 
                 # Post-synaptic potential
                 self.pop[region][p]['u'] = self.activation(region, p)
