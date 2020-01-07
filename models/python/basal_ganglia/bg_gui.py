@@ -14,23 +14,23 @@ BG_REGIONS = ['Ventral']
 PLOT_LENGTH = 1000
 PLOT_COLOURS = ('r', 'g', 'b', 'c', 'm', 'y', 'w')
 
-FIXED_INPUTS = False
+FIXED_INPUTS = True
 BG_INPUTS = {
-    0: {
+    1: {
         'Onset'    : 0.5,
         # 'Size'     : 0.4,
         'Size'     : 0.6,
-        'Offset'   : 2,
+        'Offset'   : 3,
         # 'Transient': {
         #     'Onset' : 3,
         #     'Offset': 4,
         #     'Size'  : 0.2,
         # },
     },
-    1: {
-        'Onset' : 0.6,
+    3: {
+        'Onset' : 0.5,
         'Size'  : 0.6,
-        'Offset': 2.1,
+        'Offset': 3,
     },
 }
 
