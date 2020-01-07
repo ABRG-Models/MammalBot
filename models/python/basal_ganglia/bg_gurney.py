@@ -29,7 +29,7 @@ class BasalGanglia(object):
             'dMSN'   : {
                 'Name': 'Direct-pathway MSNs',
                 'e'   : 0.2,
-                'DA'  : 1,              # INVENTED
+                'DA'  : 1,              # Sign modifier; dMSN DA is excitatory
                 'W'   : {
                     'Inp': 0.5,         # Humphries & Gurney (2002)
                     'Ctx': 0.5,         # Humphries & Gurney (2002)
@@ -38,7 +38,7 @@ class BasalGanglia(object):
             'iMSN'   : {
                 'Name': 'Indirect-pathway MSNs',
                 'e'   : 0.2,
-                'DA'  : -1,             # INVENTED
+                'DA'  : -1,             # Sign modifier; iMSN DA is inhibitory
                 'W'   : {
                     'Inp': 0.5,         # Humphries & Gurney (2002)
                     'Ctx': 0.5,         # Humphries & Gurney (2002)
@@ -91,7 +91,7 @@ class BasalGanglia(object):
                     'Ctx'    : 1,       # Humphries & Gurney (2002)
                 },
             },
-            # Justification for creating ventral and dorsal PPn populations:
+            # Justification for creating both ventral and dorsal PPn populations:
             # "There is evidence that anterior cholinergic PPn neurons preferentially project to the SNc,
             # whereas posterior cholinergic PPn cells preferentially project to the VTA (Oakman et al., 1995)."
             # - Humphries and Prescott (2010), pp 392
@@ -231,6 +231,7 @@ class BasalGanglia(object):
 
         # Dopamine modifier
         if 'DA' in self.pop[dst_region][dst_pop].keys():
+            # Eq. 11 from Humphries & Gurney (2002)
             u = u * (1 + self.pop[dst_region]['DA']['o'] * self.pop[dst_region][dst_pop]['DA'])
 
         return u
@@ -247,10 +248,10 @@ class BasalGanglia(object):
                 self.pop['Ventral']['LH_GABA']['o'] = np.array([1, 0])
                 self.pop['Ventral']['LH_GLU']['o'] = np.array([0, 1])
 
-                # Recovery variables
+                # Post-synaptic potential
                 self.pop[region][p]['u'] = self.activation(region, p)
 
                 # Leaky integrator activation
-                # (Eq. 1 from Gurney, Prescott, & Redgrave (2001b))
+                # Eq. 1 from Gurney, Prescott, & Redgrave (2001b)
                 self.pop[region][p]['a'] = (self.pop[region][p]['a'] - self.pop[region][p]['u']) \
                                            * self.decay_constant + self.pop[region][p]['u']
