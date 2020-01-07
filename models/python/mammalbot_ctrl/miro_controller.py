@@ -46,7 +46,7 @@ class controller:
 			
 			# filter wheel speed
 			gamma = 0.25
-			
+
 			for i in range(2):
 				self.wheel_speed[i] += gamma * (wheel_speed[i] - self.wheel_speed[i])
 
@@ -63,38 +63,18 @@ class controller:
 			return 0
 		
 
-	def __init__(self, args):
-
-		#Create object to convert ROS images to OpenCV format
-		self.image_converter = CvBridge()	
-		self.init_ brain()
+	def __init__(self):
 
 		rospy.init_node("client_shepherd", anonymous=True)
 
-		# state
-		self.t_now = 0.0
-		self.im = [None, None]
+		topic = topic_base_name + "/control/cmd_vel"
+		print ("publish", topic)
+		self.pub_cmd_vel = rospy.Publisher(topic, TwistStamped, queue_size=0)
+
 		self.wheel_speed = [0.0, 0.0]
 
-		# inputs
-		self.active = False
 		self.package = None
-
-		# handle args
-		for arg in args:
-			f = arg.find('=')
-			if f == -1:
-				key = arg
-				val = ""
-			else:
-				key = arg[:f]
-				val = arg[f+1:]
-			if key == "pass":
-				pass
-			else:
-				error("argument not recognised \"" + arg + "\"")
-
-		
+	
 		# wait for connect
 		print "wait for connect..."
 		time.sleep(1)
