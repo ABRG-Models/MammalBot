@@ -17,7 +17,7 @@ class MiroController:
 
         self.views = []
         self.model = Model()
-        self.robot = MotorSystem()
+        self.robot = MiroClient()
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.step)

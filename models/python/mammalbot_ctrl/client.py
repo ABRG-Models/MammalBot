@@ -111,15 +111,7 @@ class controller:
 				for i in range(2):
 					self.wheel_speed[i] += gamma * (wheel_speed[i] - self.wheel_speed[i])
 
-				# convert wheel speed to command velocity (m/sec, Rad/sec)
-				(dr, dtheta) = miro.utils.wheel_speed2cmd_vel(self.wheel_speed)
-
-				# update message to publish to control/cmd_vel
-				msg_cmd_vel.twist.linear.x = dr
-				msg_cmd_vel.twist.angular.z = dtheta
-
-				# publish message to topic
-				self.pub_cmd_vel.publish(msg_cmd_vel)
+				
 
 
 			# yield
@@ -127,7 +119,7 @@ class controller:
 			self.t_now = self.t_now + 0.01
 
 	def init_brain( self ):
-		
+
 
 	def __init__(self, args):
 

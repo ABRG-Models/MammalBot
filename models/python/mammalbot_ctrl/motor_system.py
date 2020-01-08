@@ -1,16 +1,10 @@
 class MotorSystem:
-	def __init__(self):
-		topic = topic_base_name + "/control/cmd_vel"
-        print ("publish", topic)
-        self.pub_cmd_vel = rospy.Publisher(topic, TwistStamped, queue_size=0)
-        self.wheel_speed = [0.0, 0.0]
-        self.package = None
+	def __init__(self, miro_client):
+		self.miro_client = miro_client
 
 	def step( self, model ):
 		# Computing output
-		
-		# output
-        msg_cmd_vel = TwistStamped()
+
         # desired wheel speed (m/sec)
         wheel_speed = [0.0, 0.0]
 
@@ -43,14 +37,6 @@ class MotorSystem:
             for i in range(2):
                 self.wheel_speed[i] += gamma * (wheel_speed[i] - self.wheel_speed[i])
 
-            # convert wheel speed to command velocity (m/sec, Rad/sec)
-            (dr, dtheta) = miro.utils.wheel_speed2cmd_vel(self.wheel_speed)
-
-            # update message to publish to control/cmd_vel
-            msg_cmd_vel.twist.linear.x = dr
-            msg_cmd_vel.twist.angular.z = dtheta
-
-            # publish message to topic
-            self.pub_cmd_vel.publish(msg_cmd_vel)
+            self.miro_client.pub_cmd_vel_ms( self.wheel_speed[0], self.wheel_speed[1] )
 
             return 0

@@ -7,49 +7,26 @@ class Cortex:
 
 		self.image_converter = CvBridge()	
 		self.im = [None, None]
-		# robot name
-		topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
+		
 
-		# publish
-		topic = topic_base_name + "/control/cmd_vel"
-		# subscribe
-		topic = topic_base_name + "/sensors/package"
-		print ("subscribe", topic)
-		self.sub_package = rospy.Subscriber(topic, miro.msg.sensors_package, self.callback_package, queue_size=1, tcp_nodelay=True)
+	# def callback_cam(self, ros_image, index):
 
-		self.sub_caml = rospy.Subscriber(topic_base_name + "/sensors/caml/compressed",
-					CompressedImage, self.callback_caml)
+	# 	# silently (ish) handle corrupted JPEG frames
+	# 	try:
+	# 		# convert compressed ROS image to raw CV image
+	# 		image = self.image_converter.compressed_imgmsg_to_cv2(ros_image, "rgb8")
 
-		self.sub_camr = rospy.Subscriber(topic_base_name + "/sensors/camr/compressed",
-					CompressedImage, self.callback_camr)
+	# 		# do zoom
+	# 		#image = cv2.resize(image, (int(image.shape[1] * 0.5), int(image.shape[0] * 0.5)))
 
+	# 		# store image
+	# 		self.im[index] = image
 
-	def callback_cam(self, ros_image, index):
+	# 	except CvBridgeError as e:
 
-		# silently (ish) handle corrupted JPEG frames
-		try:
-			# convert compressed ROS image to raw CV image
-			image = self.image_converter.compressed_imgmsg_to_cv2(ros_image, "rgb8")
-
-			# do zoom
-			#image = cv2.resize(image, (int(image.shape[1] * 0.5), int(image.shape[0] * 0.5)))
-
-			# store image
-			self.im[index] = image
-
-		except CvBridgeError as e:
-
-			# swallow error, silently
-			#print(e)
-			pass
-
-	def callback_caml(self, ros_image):
-
-		self.callback_cam(ros_image, 0)
-
-	def callback_camr(self, ros_image):
-
-		self.callback_cam(ros_image, 1)
+	# 		# swallow error, silently
+	# 		#print(e)
+	# 		pass
 
 	def hasImage( self ):
 		return (not self.im[0] is None) and (not self.im[1] is None)
@@ -57,9 +34,7 @@ class Cortex:
 	def step( self, inputs ):
 		# Return the appropriate to the BG
 		# copy frames
-		im = self.im
-		# clear both frames
-		self.im = [None, None]
+		im = miroClient.pop_images()
 		# send to image processor
 		ball = detector.processImages(im)
 
