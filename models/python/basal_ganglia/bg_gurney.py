@@ -237,7 +237,7 @@ class BasalGanglia(object):
         return u
 
     def step(self, c):
-        # TODO: Ensure sensory input is to channel groups (1,3) and (2,4) to represent ENEMY and FRIEND
+        # TODO: Ensure sensory input is to channel groups (1,3) and (2,4) to represent FOOD and FOE
         self.input = c
 
         for region in self.pop.keys():

@@ -1,7 +1,18 @@
 #!/usr/bin/python
 #
 # Miro controller
-# 
+#
+
+# TODO:
+# import bg
+# import LH
+# import cortex
+
+# if average of striatal output (1,3) > 0.95, set lights to green (food)
+# if average of striatal output (2,4) > 0.95, set lights to red (foe)
+
+# if average of striatal output (1,2) > 0.95, set both wheels +0.5 (approach)
+# if average of striatal output (2,3) > 0.95, set both wheels -0.5 (avoid)
 
 class controller:
 
