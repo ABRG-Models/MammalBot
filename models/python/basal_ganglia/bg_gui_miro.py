@@ -6,34 +6,6 @@ from PyQt5.QtWidgets import (
     QApplication, QCheckBox, QGridLayout, QGroupBox, QMenu, QPushButton, QRadioButton, QVBoxLayout, QWidget, QSlider)
 from bg_gurney import BasalGanglia
 
-# Set fixed values
-BG_CHANNELS: int = 2
-BG_PLOTS = ['Inp', 'dMSN', 'iMSN', 'PPn', 'VTA_SNc', 'DA', 'Ctx']
-BG_REGIONS = ['Ventral']
-# BG_PLOTS = ['Input', 'NAc', 'STNv', 'SNr', 'DM', 'PL']
-PLOT_LENGTH = 1000
-PLOT_COLOURS = ('r', 'g', 'b', 'c', 'm', 'y', 'w')
-
-FIXED_INPUTS = True
-BG_INPUTS = {
-    0: {
-        'Onset'    : 0.5,
-        # 'Size'     : 0.4,
-        'Size'     : 0.6,
-        'Offset'   : 2,
-        # 'Transient': {
-        #     'Onset' : 3,
-        #     'Offset': 4,
-        #     'Size'  : 0.2,
-        # },
-    },
-    1: {
-        'Onset' : 0.6,
-        'Size'  : 0.6,
-        'Offset': 2.1,
-    },
-}
-
 
 class Window(QWidget):
     def __init__(self, parent=None):
@@ -43,31 +15,29 @@ class Window(QWidget):
         self.data = {}
         self.plot = {}
 
-        # Initialise Qt objects
+        self.BG_PLOTS = ['Inp', 'dMSN', 'iMSN', 'PPn', 'VTA_SNc', 'DA', 'Ctx']
+        self.BG_REGIONS = ['Ventral']
+        # BG_PLOTS = ['Input', 'NAc', 'STNv', 'SNr', 'DM', 'PL']
+        self.PLOT_LENGTH = 1000
+        self.PLOT_COLOURS = ('r', 'g', 'b', 'c', 'm', 'y', 'w')
+
+
+    def configure( self, model ):
+         # Initialise Qt objects
         grid = QGridLayout()
         self.slider = {}
-        self.timer = QTimer()
-
-        # # Testing elapsed timer
-        # self.elapsed = QElapsedTimer()
-        # self.elapsed.start()
-
-        # Initialise basal ganglia
-        self.bg = BasalGanglia(BG_CHANNELS)
-        self.inputs = np.zeros(BG_CHANNELS)
-
         # Initialise time pointer
         self.ptr = 0
 
-        for n in range(BG_CHANNELS):
+        for n in range(model.BG_CHANNELS):
             grid.addWidget(self.create_input_sliders(n), 0, n)
 
-        for x in range(len(BG_REGIONS)):
-            for y in range(len(BG_PLOTS)):
-                pop = BG_REGIONS[x] + '_' + BG_PLOTS[y]
+        for x in range(len(self.BG_REGIONS)):
+            for y in range(len(self.BG_PLOTS)):
+                pop = self.BG_REGIONS[x] + '_' + self.BG_PLOTS[y]
                 self.data[pop] = {}
-                self.data[pop]['Region'] = BG_REGIONS[x]
-                self.data[pop]['Population'] = BG_PLOTS[y]
+                self.data[pop]['Region'] = self.BG_REGIONS[x]
+                self.data[pop]['Population'] = self.BG_PLOTS[y]
 
                 # TODO: Tidy this up
                 if x is 0:
@@ -75,17 +45,15 @@ class Window(QWidget):
                 else:
                     col = 3
 
-                grid.addWidget(self.create_plots(x, y), y + 1, col, 1, 2)    # TODO: Tidy up these columns a bit
-                for i in range(BG_CHANNELS):
-                    self.data[pop][i] = np.zeros(PLOT_LENGTH)
+                grid.addWidget(self.create_plots(model, x, y), y + 1, col, 1, 2)    # TODO: Tidy up these columns a bit
 
-        # Plots done with QTimer method
-        self.timer.timeout.connect(self.update_plots)
-        self.timer.start(0)
+                for i in range(model.BG_CHANNELS):
+                    self.data[pop][i] = np.zeros(self.PLOT_LENGTH)
 
         # Set window layout
         self.setLayout(grid)
         self.setWindowTitle('Basal Ganglia')
+
 
     def create_input_sliders(self, ch):
         ch_id = 'CH ' + str(ch + 1)
@@ -106,8 +74,8 @@ class Window(QWidget):
 
         return group_box
 
-    def create_plots(self, region, pop):
-        plot_id = BG_REGIONS[region] + '_' + BG_PLOTS[pop]
+    def create_plots(self, model, region, pop):
+        plot_id = self.BG_REGIONS[region] + '_' + self.BG_PLOTS[pop]
         group_box = QGroupBox(plot_id)
 
         # Create and configure PlotWidget for each population
@@ -119,8 +87,8 @@ class Window(QWidget):
         self.plot[plot_id] = {}
         # self.plot[plot_id]['Region'] = BG_REGIONS[region]
         # self.plot[plot_id]['Population'] = BG_PLOTS[pop]
-        for n in range(BG_CHANNELS):
-            self.plot[plot_id][n] = plt.plot([], pen=pg.mkPen(PLOT_COLOURS[n], width=2))
+        for n in range(model.BG_CHANNELS):
+            self.plot[plot_id][n] = plt.plot([], pen=pg.mkPen(self.PLOT_COLOURS[n], width=2))
 
         vbox = QVBoxLayout()
         vbox.addWidget(plt)
@@ -132,25 +100,18 @@ class Window(QWidget):
     def change_inputs(self, val, ch):
         self.inputs[ch] = float(val) / 100
 
-    def update_plots(self):
+    def notify(self, model):
 
-        if FIXED_INPUTS:
+        if model.FIXED_INPUTS:
             curr_time = self.ptr / 100
-            for c in BG_INPUTS.keys():
-                if BG_INPUTS[c]['Onset'] <= curr_time < BG_INPUTS[c]['Offset']:
-                    self.inputs[c] = BG_INPUTS[c]['Size']
+            for c in model.BG_INPUTS.keys():
+                if model.BG_INPUTS[c]['Onset'] <= curr_time < model.BG_INPUTS[c]['Offset']:
+                    self.inputs[c] = model.BG_INPUTS[c]['Size']
                     # Transient
-                    if 'Transient' in BG_INPUTS[c] and BG_INPUTS[c]['Transient']['Onset'] <= curr_time < BG_INPUTS[c]['Transient']['Offset']:
-                        self.inputs[c] = BG_INPUTS[c]['Size'] + BG_INPUTS[c]['Transient']['Size']
+                    if 'Transient' in model.BG_INPUTS[c] and model.BG_INPUTS[c]['Transient']['Onset'] <= curr_time < model.BG_INPUTS[c]['Transient']['Offset']:
+                        self.inputs[c] = model.BG_INPUTS[c]['Size'] + model.BG_INPUTS[c]['Transient']['Size']
                 else:
                     self.inputs[c] = 0
-
-        # Run BG for a single timestep
-        self.inputs = self.lh.step()
-        self.inputs = self.ctx.step()
-        self.bg.step(self.inputs)
-        self.controller.step( self.bg, self.ctx, self.lh )
-
 
         # Increment time pointer
         self.ptr += 1
@@ -159,15 +120,15 @@ class Window(QWidget):
             reg = self.data[p]['Region']
             pop = self.data[p]['Population']
 
-            for n in range(BG_CHANNELS):
+            for n in range(model.BG_CHANNELS):
                 # Shift all data along by one
                 self.data[p][n][:-1] = self.data[p][n][1:]
 
                 if pop == 'Inp':
-                    self.data[p][n][-1] = self.inputs[n].item()
+                    self.data[p][n][-1] = model.inputs[n].item()
                 else:
                     # item() needed to convert numpy.float64 to native Python float
-                    self.data[p][n][-1] = self.bg.pop[reg][pop]['o'][n].item()
+                    self.data[p][n][-1] = model.bg.pop[reg][pop]['o'][n].item()
 
                 self.plot[p][n].setData(self.data[p][n])
                 # self.plot[pop][n].setPos(self.ptr, 0)
