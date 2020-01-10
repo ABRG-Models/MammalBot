@@ -58,9 +58,6 @@ class NodeAction(node.Node):
 
 		node.Node.__init__(self, sys, "action")
 
-		# action selection (basal ganglia model)
-		self.selector = BasalGanglia(self.state, self.pars)
-
 		# input/output objects
 		self.action_input = ActionInput()
 
@@ -75,6 +72,10 @@ class NodeAction(node.Node):
 				ActionRetreat(self),
 				ActionSpecial(self)
 				]
+
+		# action selection (basal ganglia model)
+		# Now including number of actions
+		self.selector = BasalGanglia(self.state, self.pars, len(self.actions))
 
 		# state
 		self.count = 0
