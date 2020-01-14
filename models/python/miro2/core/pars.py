@@ -441,7 +441,7 @@ class Flags( object ):
 		self.EXPRESS_THROUGH_TAIL		= 1
 		self.EXPRESS_THROUGH_EARS		= 1
 		self.EXPRESS_THROUGH_EYELIDS	= 1
-		self.EXPRESS_THROUGH_VOICE		= 1
+		self.EXPRESS_THROUGH_VOICE		= 0
 		self.EXPRESS_THROUGH_NECK		= 1
 		self.EXPRESS_THROUGH_WHEELS		= 1
 
@@ -459,8 +459,9 @@ class Flags( object ):
 		self.SALIENCE_FROM_FACE			= 1
 		self.SALIENCE_FROM_BALL			= 1
 		self.SALIENCE_FROM_APRIL		= 1
+		self.SALIENCE_FROM_CLIFF        = 0
 
-		self.BODY_ENABLE_CLIFF_REFLEX	= 1
+		self.BODY_ENABLE_CLIFF_REFLEX	= 0
 		self.BODY_ENABLE_TRANSLATION	= 1
 		self.BODY_ENABLE_ROTATION		= 1
 		self.BODY_ENABLE_NECK_MOVEMENT	= 1
@@ -572,7 +573,7 @@ class CorePars (object):
 		#
 		# note "A" is actioned in on_system_ready.sh
 		#
-		self.flags.EXPRESS_THROUGH_VOICE = self.demo_flag_norm_on("v", "disable vocalisation")
+		# self.flags.EXPRESS_THROUGH_VOICE = self.demo_flag_norm_on("v", "disable vocalisation")
 		self.flags.BODY_ENABLE_TRANSLATION = self.demo_flag_norm_on("t", "disable translation")
 		self.flags.BODY_ENABLE_ROTATION = self.demo_flag_norm_on("r", "disable rotation")
 		self.flags.BODY_ENABLE_NECK_MOVEMENT = self.demo_flag_norm_on("n", "disable neck movement")
