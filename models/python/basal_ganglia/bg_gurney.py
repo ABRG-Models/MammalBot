@@ -51,7 +51,7 @@ class BasalGanglia(object):
                     'Inp': 0.5,         # Humphries & Gurney (2002)
                     'Ctx': 0.5,         # Humphries & Gurney (2002)
                     'GPe': -1,          # Gurney, Prescott, & Redgrave (2001)
-                    'PPn': 1,           # INVENTED (Duplicate of DA projection)
+                    # 'PPn': 1,           # INVENTED (Duplicate of DA projection)
                 },
             },
             'GPe'    : {
@@ -76,51 +76,51 @@ class BasalGanglia(object):
                 'Name': 'Cortex',
                 'e'   : 0,
                 'W'   : {
-                    # 'Inp' : 1,        # Humphries & Gurney (2002)
-                    # 'Thal': 1,        # Humphries & Gurney (2002)
-                    'Inp' : 0.5,
-                    'Thal': 0.5,
+                    'Inp' : 1,          # Humphries & Gurney (2002)
+                    'Thal': 1,          # Humphries & Gurney (2002)
+                    # 'Inp' : 0.5,
+                    # 'Thal': 0.5,
                 },
             },
             'Thal'   : {
                 'Name': 'Thalamus',
                 'e'   : 0,
                 'W'   : {
-                    # 'GPi_SNr': -1,    # Humphries & Gurney (2002)
-                    'GPi_SNr': -1.05,
+                    'GPi_SNr': -1,      # Humphries & Gurney (2002)
+                    # 'GPi_SNr': -1.05,
                     'Ctx'    : 1,       # Humphries & Gurney (2002)
                 },
             },
-            # Justification for creating both ventral and dorsal PPn populations:
-            # "There is evidence that anterior cholinergic PPn neurons preferentially project to the SNc,
-            # whereas posterior cholinergic PPn cells preferentially project to the VTA (Oakman et al., 1995)."
-            # - Humphries and Prescott (2010), pp 392
-            'PPn'    : {
-                'Name': 'Pedunculopontine nucleus',
-                'e'   : -0.15,
-                'W'   : {
-                    'GPe'    : -0.5,    # Humphries & Prescott (2010)
-                    # 'GPe'    : -0.3
-                    'STN'    : 0.8,     # Made up by me (copied from other STN projections)
-                    'GPi_SNr': -0.5,    # Made up by me
-                }
-            },
-            'VTA_SNc': {
-                'Name': 'Ventral tegmental area / Substantia nigra pars compacta',
-                'e'   : -0.075,         # Humphries & Prescott (2010)
-                'W'   : {
-                    'dMSN': -1,         # INVENTED
-                    'iMSN': -1,         # INVENTED
-                },
-            },
-            'DA'     : {
-                'Name': 'Dopamine neurons',
-                'e'   : -0.2,
-                'W'   : {
-                    'VTA_SNc': -1,      # INVENTED
-                    'PPn'    : 1,       # Humphries & Prescott (2010) (to VTA)
-                },
-            },
+            # # Justification for creating both ventral and dorsal PPn populations:
+            # # "There is evidence that anterior cholinergic PPn neurons preferentially project to the SNc,
+            # # whereas posterior cholinergic PPn cells preferentially project to the VTA (Oakman et al., 1995)."
+            # # - Humphries and Prescott (2010), pp 392
+            # 'PPn'    : {
+            #     'Name': 'Pedunculopontine nucleus',
+            #     'e'   : -0.15,
+            #     'W'   : {
+            #         'GPe'    : -0.5,    # Humphries & Prescott (2010)
+            #         # 'GPe'    : -0.3
+            #         'STN'    : 0.8,     # Made up by me (copied from other STN projections)
+            #         'GPi_SNr': -0.5,    # Made up by me
+            #     }
+            # },
+            # 'VTA_SNc': {
+            #     'Name': 'Ventral tegmental area / Substantia nigra pars compacta',
+            #     'e'   : -0.075,         # Humphries & Prescott (2010)
+            #     'W'   : {
+            #         'dMSN': -1,         # INVENTED
+            #         'iMSN': -1,         # INVENTED
+            #     },
+            # },
+            # 'DA'     : {
+            #     'Name': 'Dopamine neurons',
+            #     'e'   : -0.2,
+            #     'W'   : {
+            #         'VTA_SNc': -1,      # INVENTED
+            #         'PPn'    : 1,       # Humphries & Prescott (2010) (to VTA)
+            #     },
+            # },
         }
 
         # Create dorsal and ventral BG structures from core layout
@@ -141,11 +141,11 @@ class BasalGanglia(object):
             'W'   : {},
         }
 
-        # Region-specific modifications
-        self.pop['Dorsal']['VTA_SNc']['W']['Ventral'] = {
-            'dMSN': -1,  # TODO: Calibrate
-            'iMSN': -1,  # TODO: Calibrate
-        }
+        # # Region-specific modifications
+        # self.pop['Dorsal']['VTA_SNc']['W']['Ventral'] = {
+        #     'dMSN': -1,  # TODO: Calibrate
+        #     'iMSN': -1,  # TODO: Calibrate
+        # }
 
         # Dorsal striatum receiving inputs from 'ventral' cortex region
         self.pop['Dorsal']['dMSN']['W'] = {
@@ -164,9 +164,9 @@ class BasalGanglia(object):
             },
         }
 
-        # Lateral hypothalamus to ventral SNc weight
-        self.pop['Ventral']['VTA_SNc']['W']['LH_GABA'] = -1  # TODO: Calibrate
-        self.pop['Ventral']['VTA_SNc']['W']['LH_GLU'] = 1  # TODO: Calibrate
+        # # Lateral hypothalamus to ventral SNc weight
+        # self.pop['Ventral']['VTA_SNc']['W']['LH_GABA'] = -1 # TODO: Calibrate
+        # self.pop['Ventral']['VTA_SNc']['W']['LH_GLU'] = 1   # TODO: Calibrate
 
         # Input, activity and output arrays
         self.input = np.zeros(channels)
@@ -229,15 +229,15 @@ class BasalGanglia(object):
             else:
                 u = u + src_weight * self.input
 
-        # Dopamine modifier
-        if 'DA' in self.pop[dst_region][dst_pop].keys():
-            # Eq. 11 from Humphries & Gurney (2002)
-            u = u * (1 + self.pop[dst_region]['DA']['o'] * self.pop[dst_region][dst_pop]['DA'])
+        # DOPAMINE CURRENTLY DISABLED
+        # # Dopamine modifier
+        # if 'DA' in self.pop[dst_region][dst_pop].keys():
+        #     # Eq. 11 from Humphries & Gurney (2002)
+        #     u = u * (1 + self.pop[dst_region]['DA']['o'] * self.pop[dst_region][dst_pop]['DA'])
 
         return u
 
     def step(self, c):
-        # TODO: Ensure sensory input is to channel groups (1,3) and (2,4) to represent FOOD and FOE
         self.input = c
 
         for region in self.pop.keys():
@@ -245,10 +245,9 @@ class BasalGanglia(object):
                 # Outputs
                 self.pop[region][p]['o'] = self.ramp(self.pop[region][p]['a'], self.pop[region][p]['e'], self.m)
 
-                # FIXED LH OUTPUT FOR TESTING ONLY
-                # TODO: Ensure LH input is to channel groups (1,2) and (3,4) to represent APPROACH and AVOID
-                self.pop['Ventral']['LH_GABA']['o'] = np.array([0, 0, 1, 1])
-                self.pop['Ventral']['LH_GLU']['o'] = np.array([1, 1, 0, 0])
+                # # FIXED LH OUTPUT FOR TESTING ONLY
+                # self.pop['Ventral']['LH_GABA']['o'] = np.array([0, 0, 1, 1])
+                # self.pop['Ventral']['LH_GLU']['o'] = np.array([1, 1, 0, 0])
 
                 # Post-synaptic potential
                 self.pop[region][p]['u'] = self.activation(region, p)
