@@ -38,7 +38,7 @@ import numpy as np
 import random
 
 import miro2 as miro
-from bg_gurney import BasalGanglia as BG_GPR
+from bg_gurney import BasalGanglia as bg_gpr
 
 
 def fmt_prio(prio):
@@ -66,7 +66,7 @@ class BasalGanglia(object):
 		self.sham = False
 
 		# Implement GPR basal ganglia
-		self.bg = BG_GPR(channels)
+		self.bg = bg_gpr(channels)
 
 	def update(self, node):
 
@@ -86,8 +86,6 @@ class BasalGanglia(object):
 			prio = np.clip(prio, 0.0, 1.0)
 			self.prio[i] = prio
 
-		#print self.prio
-
 		# normalise output
 		#if np.sum(self.prio) > 0:
 		#	self.prio /= np.sum(self.prio)
@@ -96,14 +94,18 @@ class BasalGanglia(object):
 		noise = np.random.normal(size=len(actions)) * self.pars.selection.selection_noise_mag
 		self.prio += noise
 
-		# Implement GPR basal ganglia
-		self.bg.step(self.prio)
+		# TODO: Add pars flag to switch between BG types
 
-		# Select action with maximum MCx output
-		selected = np.argmax(self.bg.pop['Ventral']['Ctx']['o'])
+		if not self.pars.dev.DYNAMIC_BG:
+			# Winner-take-all BG
+			# select action with maximum priority (winner take all)
+			selected = np.argmax(self.prio)
+		else:
+			# Dynamical GPR BG
+			self.bg.step(self.prio)
 
-		# # select action with maximum priority (winner take all)
-		# selected = np.argmax(self.prio)
+			# Select action with maximum MCx output
+			selected = np.argmax(self.bg.pop['Ventral']['Ctx']['o'])
 
 		# update selection
 		if self.selected != selected:

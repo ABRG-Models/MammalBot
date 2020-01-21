@@ -43,7 +43,7 @@ import miro2 as miro
 import signals
 
 # Borrowed from node_action
-from action.action_types import ActionInput
+# from action.action_types import ActionInput
 
 class NodeSpatial(node.Node):
 
@@ -76,8 +76,11 @@ class NodeSpatial(node.Node):
 			with open("/tmp/spatial", "w") as file:
 				file.write("")
 
-		# Borrowed from node_action
-		self.action_input = ActionInput()
+		# # Borrowed from node_action
+		# self.action_input = ActionInput()
+
+		# # Import social drive value from hypothalamus
+		# self.DEBUG_SOCIAL_VAL = 1
 
 	def jit_init(self, stream_index, img_shape):
 
@@ -229,11 +232,6 @@ class NodeSpatial(node.Node):
 		frame[dy1:dy2, dx1:dx2] += pattern[sy1:sy2, sx1:sx2]
 
 	def inject_dome(self, frame, center, radius, height):
-
-		# print('dome center: ' + str(center))
-		# print('dome radius: ' + str(radius))
-		# print('dome height: ' + str(height))
-
 		# simple in-fill of specified circle
 		#cv2.circle(frame, center, radius, height, -1)
 
@@ -289,7 +287,7 @@ class NodeSpatial(node.Node):
 
 			# debug
 			if not self.pars.dev.DEBUG_HALT: # do not pollute info
-				print "face at range", range, "with conf", conf
+				print 'Face seen at range', range, 'with confidence', conf
 			if self.pars.flags.DEBUG_DETECTION:
 				self.output.tone = 255
 
@@ -297,7 +295,13 @@ class NodeSpatial(node.Node):
 			x = int(corn[0] + size[0] * 0.5)
 			y = int(corn[1] + size[1] * 0.5)
 			r = (size[0] + size[1]) * 0.25
-			m = self.pars.spatial.face_gain * conf
+
+			# Modify face salience
+			m_old = self.pars.spatial.face_gain * conf
+			# m = (self.DEBUG_SOCIAL_VAL ** 2) * conf
+			m = (self.pars.dev.SOCIAL_DRIVE ** 2) * conf
+			print 'Face salience:', m, '(would have been', m_old, ')'
+			print 'Social drive:', self.pars.dev.SOCIAL_DRIVE
 
 			# choose radius that reflects representational size
 			# based on physical size in image
@@ -333,6 +337,7 @@ class NodeSpatial(node.Node):
 
 			# get range
 			range = self.estimate_range(r * 2, self.pars.action.ball_size_m)
+			print('Estimated ball range: ' + str(range))
 
 			# debug
 			if not self.pars.dev.DEBUG_HALT: # do not pollute info
@@ -487,74 +492,6 @@ class NodeSpatial(node.Node):
 
 			# inject
 			self.pri[stream_index] += (gain * audio_event.level) * response
-
-	def inject_cliff(self, stream_index):
-		# Get cliff data (from node_action)
-		msg = self.input.sensors_package
-
-		if msg is not None:
-			self.action_input.cliff = np.array(msg.cliff.data)
-			print('Cliff data: ' + str(self.action_input.cliff))
-
-			# what are the conditions for settling into the gradient?
-			# lower number is blacker
-			# if cliff_0 < cliff 1 then right is colder, vice versa
-			# if both cliffs are between 0.6 and 0.8 then no movement needed?
-
-			if stream_index < 2:
-				if self.action_input.cliff[0] < self.action_input.cliff[1]:
-					delta = 0.785398 - self.central_axis_azim[stream_index]
-					delta_sq = delta ** 2
-					response_azim = np.exp(-delta_sq)
-
-					# response in elev
-					delta = 0 - self.central_axis_elev[stream_index]
-					delta_sq = delta ** 2
-					response_elev = np.exp(-delta_sq)
-
-					# combine response
-					response_azim = np.reshape(response_azim, (len(response_azim), 1))
-					response_elev = np.reshape(response_elev, (len(response_elev), 1))
-					response = np.dot(response_elev, response_azim.T)
-
-					# inject
-					self.pri[stream_index] += 1 * response
-
-
-			# # TODO: Modify this code from inject_audio
-			# # handle lr streams
-			# if stream_index < 2:
-			#
-			# 	# response in azim
-			# 	delta = audio_event.azim - self.central_axis_azim[stream_index]
-			# 	delta_sq = (delta * self.pars.spatial.audio_event_azim_size_recip) ** 2
-			# 	response_azim = np.exp(-delta_sq)
-			#
-			# 	# response in elev
-			# 	delta = audio_event.elev - self.central_axis_elev[stream_index]
-			# 	delta_sq = (delta * self.pars.spatial.audio_event_elev_size_recip) ** 2
-			# 	response_elev = np.exp(-delta_sq)
-			#
-			# 	# combine response
-			# 	response_azim = np.reshape(response_azim, (len(response_azim), 1))
-			# 	response_elev = np.reshape(response_elev, (len(response_elev), 1))
-			# 	response = np.dot(response_elev, response_azim.T)
-			#
-			# # handle wide stream
-			# if stream_index == 2:
-			#
-			# 	# response in azim
-			# 	delta = audio_event.azim - self.wide_azim
-			# 	delta_sq = (delta * self.pars.spatial.audio_event_azim_size_recip) ** 2
-			# 	response = np.exp(-delta_sq)
-			#
-			# 	# store elevation to be used in priority peak
-			# 	self.wide_field_elev = audio_event.elev
-			#
-			# # inject
-			# self.pri[stream_index] += (gain * audio_event.level) * response
-		else:
-			return
 
 	def publish_peak(self, peak):
 
@@ -736,10 +673,6 @@ class NodeSpatial(node.Node):
 			# inject sound events
 			if self.pars.flags.SALIENCE_FROM_SOUND:
 				self.inject_audio(stream_index)
-
-			# Inject cliff events
-			if self.pars.flags.SALIENCE_FROM_CLIFF:
-				self.inject_cliff(stream_index)
 
 		# compute and access priority peak for this stream
 		peak = self.compute_stream_peak(stream_index)
