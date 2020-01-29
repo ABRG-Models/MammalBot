@@ -232,7 +232,8 @@ class ActionTemplate(object):
 			self.interface.priority = self.compute_priority()
 
 	def descending(self):
-
+		""" Basically executing the action """
+		
 		# default descending() behaviour is to start/stop as required
 		# and service an ongoing motor pattern if there is one
 

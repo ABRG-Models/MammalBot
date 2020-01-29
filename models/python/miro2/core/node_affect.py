@@ -526,6 +526,7 @@ class RTC(object):
 
 
 class NodeAffect(node.Node):
+	""" Node to process affect states """
 
 	def __init__(self, sys):
 

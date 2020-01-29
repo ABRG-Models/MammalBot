@@ -58,6 +58,7 @@ from node_detect_ball import *
 from node_detect_face import *
 from node_detect_audio import *
 from node_spatial import *
+from node_motivation import *
 
 
 
@@ -160,7 +161,14 @@ class DemoState:
 		self.reconfigure_cameras = False
 		self.reconfigured_cameras = False
 
-
+		# Motivational system
+		self.Tb = 0.0
+		self.E = 1.0
+		self.Eplay = 1.0
+		self.rho = 0.0
+		self.U = lambda x: x
+		self.mu = 0.0 # motivation
+		self.dt = 0.01 # We need to adjust the time apropriately
 
 class DemoOutput:
 
@@ -192,6 +200,7 @@ class DemoNodes:
 			self.action = NodeAction(sys)
 			self.loop = NodeLoop(sys)
 			self.spatial = NodeSpatial(sys)
+			self.motivation = NodeMotivation(sys)
 
 		# instantiate
 		if self.client_type == "camera":
@@ -214,6 +223,7 @@ class DemoNodes:
 			self.express.tick()
 			self.action.tick()
 			self.loop.tick()
+			self.motivation.tick()
 
 
 
@@ -223,6 +233,7 @@ class DemoSystem(object):
 
 		# client type
 		self.client_type = client_type
+
 		if client_type == "caml" or client_type == "camr":
 			self.client_type = "camera"
 			self.camera_sub = client_type[-1:]

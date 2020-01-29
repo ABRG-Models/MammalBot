@@ -50,6 +50,7 @@ class ExpressLight(object):
 
 
 class NodeExpress(node.Node):
+	""" Controls the robot expression through light, tail eyelids, etc. """
 
 	def __init__(self, sys):
 

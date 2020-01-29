@@ -40,6 +40,7 @@ import node
 
 
 class NodeLower(node.Node):
+	""" Node to process touch, jerk, stroke."""
 
 	def __init__(self, sys):
 
