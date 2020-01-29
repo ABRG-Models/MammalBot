@@ -70,7 +70,7 @@ class NodeAction(node.Node):
 				ActionAvert(self),
 				ActionHalt(self),
 				ActionRetreat(self),
-				# ActionSpecial(self)
+				ActionSpecial(self)
 				]
 
 		# action selection (basal ganglia model)
