@@ -100,10 +100,10 @@ class BasalGanglia(object):
 		self.bg.step(self.prio)
 
 		# Select action with maximum MCx output
-		selected = np.argmax(self.bg.pop['Ventral']['Ctx']['o'])
+		# selected = np.argmax(self.bg.pop['Ventral']['Ctx']['o'])
 
 		# # select action with maximum priority (winner take all)
-		# selected = np.argmax(self.prio)
+		selected = np.argmax(self.prio)
 
 		# update selection
 		if self.selected != selected:

@@ -63,13 +63,13 @@ class NodeAction(node.Node):
 
 		# create actions
 		self.actions = [
-				# ActionMull(self),
+				ActionMull(self),
 				ActionOrient(self),
-				# ActionApproach(self),
-				# ActionFlee(self),
-				# ActionAvert(self),
-				# ActionHalt(self),
-				# ActionRetreat(self),
+				ActionApproach(self),
+				ActionFlee(self),
+				ActionAvert(self),
+				ActionHalt(self),
+				ActionRetreat(self),
 				# ActionSpecial(self)
 				]
 
