@@ -538,6 +538,9 @@ class NodeAffect(node.Node):
 		self.emotion = signals.AffectState()
 		self.rtc = RTC(self.pars)
 
+		# SOCIAL DRIVE
+		self.social_drive = self.pars.dev.SOCIAL_DRIVE
+
 		# internal drive states
 		self.d_valence = 0
 		self.d_arousal = 0
@@ -557,6 +560,13 @@ class NodeAffect(node.Node):
 
 		# accumulate drive
 		self.d_valence += d
+
+	def drive_modulate(self, d):
+		# self.social_drive -= d
+		self.pars.dev.SOCIAL_DRIVE -= d
+		# DEBUG
+		# print 'Social drive:', self.social_drive
+		# print 'Social drive:', self.pars.dev.SOCIAL_DRIVE
 
 	def affect_from_adjust(self):
 
@@ -592,6 +602,8 @@ class NodeAffect(node.Node):
 			delta = self.state.stroke
 
 			self.drive_valence(delta * self.pars.affect.valence_stroke_gain)
+			# Modify social drive based on petting valence
+			self.drive_modulate(delta * self.pars.affect.valence_stroke_gain)
 
 			if self.mood.valence > self.pars.affect.arousal_stroke_thresh:
 				self.drive_arousal(delta * self.pars.affect.arousal_stroke_gain)
@@ -604,6 +616,8 @@ class NodeAffect(node.Node):
 
 			self.drive_valence(self.state.pet * self.pars.affect.valence_pet_gain)
 			self.drive_arousal(self.state.pet * self.pars.affect.arousal_pet_gain)
+			# Modify social drive based on petting valence
+			self.drive_modulate(self.state.pet * self.pars.affect.arousal_pet_gain)
 
 	def affect_from_accel(self):
 

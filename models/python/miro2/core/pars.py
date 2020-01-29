@@ -448,7 +448,7 @@ class Flags( object ):
 		self.ACTION_ENABLE				= 1
 		self.ACTION_ENABLE_INPUT		= 1
 		self.ACTION_MODULATE_BY_SONAR	= 1
-		self.ACTION_MODULATE_BY_CLIFF	= 1
+		self.ACTION_MODULATE_BY_CLIFF	= 0
 		self.ACTION_ENABLE_SONAR_STOP	= 1
 		self.ACTION_ENABLE_MOVE_AWAY	= 1
 		self.ACTION_HALT_ON_STALL		= 1
@@ -496,6 +496,10 @@ class Dev( object ):
 		self.SHOW_LOC_EYE			= 0
 		self.DEBUG_AUTO_STOP		= 0
 		self.SIMULATE_CLIFF			= 0
+
+		# DEBUG / TESTING ONLY
+		self.SOCIAL_DRIVE           = 1
+		self.DYNAMIC_BG             = 1
 
 	def allow(self):
 

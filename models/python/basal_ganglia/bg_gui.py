@@ -7,20 +7,20 @@ from PyQt5.QtWidgets import (
 from bg_gurney import BasalGanglia
 
 # Set fixed values
-BG_CHANNELS: int = 4
-BG_PLOTS = ['Inp', 'dMSN', 'iMSN', 'PPn', 'VTA_SNc', 'DA', 'Ctx']
+BG_CHANNELS = 4
+BG_PLOTS = ['Inp', 'dMSN', 'iMSN', 'GPi_SNr', 'Thal', 'Ctx']
 BG_REGIONS = ['Ventral']
 # BG_PLOTS = ['Input', 'NAc', 'STNv', 'SNr', 'DM', 'PL']
 PLOT_LENGTH = 1000
 PLOT_COLOURS = ('r', 'g', 'b', 'c', 'm', 'y', 'w')
 
-FIXED_INPUTS = True
+FIXED_INPUTS = False
 BG_INPUTS = {
-    1: {
+    0: {
         'Onset'    : 0.5,
         # 'Size'     : 0.4,
-        'Size'     : 0.6,
-        'Offset'   : 3,
+        'Size'     : 0.3,
+        'Offset'   : 4,
         # 'Transient': {
         #     'Onset' : 3,
         #     'Offset': 4,
@@ -28,9 +28,9 @@ BG_INPUTS = {
         # },
     },
     3: {
-        'Onset' : 0.5,
-        'Size'  : 0.6,
-        'Offset': 3,
+        'Onset' : 4.5,
+        'Size'  : 0.2,
+        'Offset': 7,
     },
 }
 

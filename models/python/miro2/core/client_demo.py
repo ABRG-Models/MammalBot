@@ -226,7 +226,6 @@ class DemoNodes:
 			self.motivation.tick()
 
 
-
 class DemoSystem(object):
 
 	def __init__(self, client_type):
