@@ -104,13 +104,31 @@ class BasalGanglia(object):
 			self.bg.step(self.prio)
 
 			# Select action with maximum MCx output
-			selected = np.argmax(self.bg.pop['Ventral']['Ctx']['o'])
+			selected_dyn = np.argmax(self.bg.pop['Ventral']['Ctx']['o'])
+
+			selected_wta = np.argmax(self.prio)
+
+			# Re-run dynamical BG until selected output matches WTA
+			# Must do this for now or else MiRo will 'stall' reselecting actions until enough timesteps have passed
+			# for MCx output to reflect new inputs
+			while selected_wta != selected_dyn:
+				selected_dyn = np.argmax(self.bg.pop['Ventral']['Ctx']['o'])
+				selected_wta = np.argmax(self.prio)
+
+				# Square inputs to boost selection speed
+				self.bg.step(self.prio ** 2)
+
+			selected = selected_dyn
 
 		# update selection
 		if self.selected != selected:
 
 			# report
-			print "[**** SELECT ACTION", actions[selected].name, "@", self.state.tick, fmt_prio(self.prio), "****]"
+			if not self.pars.dev.DYNAMIC_BG:
+				print "[**** SELECT ACTION", actions[selected].name, "@", self.state.tick, fmt_prio(self.prio), "****]"
+			else:
+				print "[**** SELECT ACTION", actions[selected].name, "@", self.state.tick, fmt_prio(
+					self.bg.pop['Ventral']['Ctx']['o']), "****]"
 			actions[self.selected].event_stop()
 			self.selected = selected
 			actions[self.selected].event_start()
