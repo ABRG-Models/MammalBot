@@ -95,7 +95,6 @@ class BasalGanglia(object):
 		self.prio += noise
 
 		# TODO: Add pars flag to switch between BG types
-
 		if not self.pars.dev.DYNAMIC_BG:
 			# Winner-take-all BG
 			# select action with maximum priority (winner take all)
