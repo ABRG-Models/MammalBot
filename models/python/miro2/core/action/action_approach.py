@@ -74,7 +74,7 @@ class ActionApproach(ActionTemplate):
 			+ move_fixation_gain * (fixation - move_fixation_thresh) \
 			+ move_valence_gain * (valence - 0.5) \
 			+ move_arousal_gain * (arousal - 0.5)
-		priority = self.move_softsat(peak_height * modulation);
+		priority = self.move_softsat(peak_height * modulation)
 
 		# modulate by cliff and sonar
 		priority *= self.input.conf_surf
