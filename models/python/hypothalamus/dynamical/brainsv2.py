@@ -123,8 +123,8 @@ class MotivationalBrain( Brain ):
 		dFood = self.D_food( E - self.Ep )
 		dTemp = self.D_temp( Tb - self.Tp )
 
-		print "Drive temp: ", dTemp, "- diff: ", (Tb - self.Tp)
-		print "Drive E", dFood
+		# print "Drive temp: ", dTemp, "- diff: ", (Tb - self.Tp)
+		# print "Drive E", dFood
 		
 		return dTb, dE, dTemp, dFood
 
@@ -149,32 +149,32 @@ class MotivationalBrain( Brain ):
 		mu_heat = self.xi(rho, TEMP_STATE)
 		mu_food = self.xi(rho, FOOD_STATE)
 
-		print "Incentive temp: ", mu_heat
-		print "Incentive food: ", mu_food
+		# print "Incentive temp: ", mu_heat
+		# print "Incentive food: ", mu_food
 		
 		return mu_heat, mu_food
 
-	# def motor_map( self, u, up, u_motivation, u_drive ):
-	# 	vmax = 5.0
-	# 	sigma_c = 0.5
+	def motor_map2( self ):
+		vmax = 5.0
+		sigma_c = 0.5
 		
 
-	# 	ft = lambda x : np.pi*x/15.0 if abs(x)<15.0 else np.pi*np.sign(x)
-	# 	gc = lambda x,x0: np.exp(-(x - x0)**2/(2*sigma_c**2))/np.sqrt(2*np.pi*sigma_c**2)
+		ft = lambda x : np.pi*x/15.0 if abs(x)<15.0 else np.pi*np.sign(x)
+		gc = lambda x,x0: np.exp(-(x - x0)**2/(2*sigma_c**2))/np.sqrt(2*np.pi*sigma_c**2)
 
-	# 	dTheta_temperature = ft((Tb - Tp)*(Tl - Tr)) + np.random.rand() - 0.5
-	# 	dTheta_energy = fe((Fl - Fr)*(Ep - E)) + np.random.rand() - 0.5
+		dTheta_temperature = ft((Tb - Tp)*(Tl - Tr)) + np.random.rand() - 0.5
+		dTheta_energy = fe((Fl - Fr)*(Ep - E)) + np.random.rand() - 0.5
 
-	# 	dx = mu*vmax*np.array([np.cos(theta), np.sin(theta)]) + 5.0*(1/(0.2 + mu))*np.array([np.random.rand(), np.random.rand()])
-	# 	dTheta = gc(rho,0)*dTheta_temperature + mu_food*dTheta_energy
+		dx = mu*vmax*np.array([np.cos(theta), np.sin(theta)]) + 5.0*(1/(0.2 + mu))*np.array([np.random.rand(), np.random.rand()])
+		dTheta = gc(rho,0)*dTheta_temperature + mu_food*dTheta_energy
 
-	# 	return np.array([dx[0], dx[1], dTheta])
+		return np.array([dx[0], dx[1], dTheta])
 
 	def motor_map( self, mu_temp, mu_food, Dtemp, Dfood, Tl, Tr, Fl, Fr ):
 		A = np.matrix([[1.0, 0.0],[0.0, 1.0]])
 		B = np.matrix([[0.0, 1.0],[1.0, 0.0]])
 		sensors_temp = np.array([Tl, Tr])/30.0
-		print sensors_temp
+		# print sensors_temp
 		sensors_food = np.array([Fl, Fr])
 
 		Ta = (Tl + Tr)/2.0
@@ -185,7 +185,7 @@ class MotivationalBrain( Brain ):
 		F_app = np.heaviside( Dfood, 0.5 )*np.abs(Dfood)
 		F_avoid = np.heaviside( -Dfood, 0.5 )*np.abs(Dfood)
 
-		print "T_app: ", T_app, ", T_avoid: ", T_avoid
+		# print "T_app: ", T_app, ", T_avoid: ", T_avoid
 		F_temp = T_app*B + T_avoid*A
 		F_food = F_app*B + F_avoid*A
 		M_temp = mu_temp*F_temp
@@ -195,7 +195,7 @@ class MotivationalBrain( Brain ):
 					  np.dot(M_food, sensors_food) + \
 					  (np.random.random(2)-0.5)*0.1
 
-		print "Wheel drive: ", wheel_drive
+		# print "Wheel drive: ", wheel_drive
 
 		return wheel_drive
 

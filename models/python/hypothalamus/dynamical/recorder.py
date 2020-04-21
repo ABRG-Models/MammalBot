@@ -26,7 +26,7 @@ class Recorder:
 
 		self.data[name][step] = value 
 
-	def plotStateVariable( self, ax, name, time, step, axis = None ):
+	def plotStateVariables( self, graphics, time, step):
 		if len(self.state_labels) == 0:
 			return 
 			
@@ -34,14 +34,14 @@ class Recorder:
 			raise Exception('Recorder error', 'Name not a state variable')
 
 		idx = self.state_labels.index(name)
-		plt.sca(ax)	
-		plt.cla()
-		ax.plot(time[:step], self.state[idx,:step])
+		#plt.sca(ax)	
+		#plt.cla()
 
-		if axis is not None:
-			ax.axis(axis)	
-			
-		ax.set_title(name)
+		graphics.plot( xdata, ydata, name )
+		
 
-	def plotTrace( self, ax, step, offset ):
-		ax.plot( self.trace[0,:step] + offset[0], self.trace[1,:step] + offset[1], 'k--')
+	def registerVariable( self, name, pos, alias = None, axis = None  ):
+
+
+	def plotTrace( self, graphics, step ):
+		graphics.trace( self.trace[0,:step], self.trace[1,:step] )
