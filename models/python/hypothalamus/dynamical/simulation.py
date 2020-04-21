@@ -1,10 +1,11 @@
 import numpy as np 
-import matplotlib.pyplot as plt
+
 # Maps
 from brainsv2 import *
 from enviroment import *
 from sensors import *
 from recorder import *
+from graphics import *
 from agent import *
 import time
 
@@ -39,39 +40,16 @@ class Simulation:
 		# plt.subplots_adjust(left=0.1, bottom=0.25, right = 0.9, top = 0.95)
 		#plt.ioff()
 
-		a = self.agents[0]
+		ao = self.agents[self.observed]		
+		(x,y) = ao.body.getPosition()
+		self.graphics.updateViewPort( x, y )
 
-		plt.sca(self.ax)
-		plt.cla()
-		plt.axis([0, self.environment.w, 0, self.environment.h])
-		#plt.title('Motivational conflict motivation')
-		plt.xlabel('x')
-		plt.ylabel('y')
-		# Setting figure properties
-		plt.ion()		
-
-		for a in self.agents:
-			(x,y) = a.body.getPosition()
-
-			if x + self.offset[0] > self.environment.w :
-				self.offset[0] = self.environment.w + self.offset[0] - x - 10.0
-			if y + self.offset[1] > self.environment.h:
-				self.offset[1] = self.environment.h + self.offset[1] - y - 10.0
-			if x + self.offset[0] < 0:
-				self.offset[0] = -x + self.offset[0] + 10.0
-			if y + self.offset[1] < 0:
-				self.offset[1] = -y + self.offset[1] + 10.0
-
-
-		self.environment.draw( self.offset )
-
-		for a in self.agents:
-			a.draw( c_step, self.offset )
-
-		a = self.agents[self.observed]	
-		a.recorder.plotStateVariable( self.ax_temp, 'Tb', self.time, c_step, axis = [0, tf, 0, 40.0] )
-		a.recorder.plotStateVariable( self.ax_energy, 'E', self.time, c_step, axis = [0, tf, 0, 1.0] )
+		self.environment.draw( self.graphics )
 		
+		for a in self.agents:
+			a.draw( c_step, self.graphics )
+		
+		ao.recorder.plotStateVariables( self.graphics, self.time, c_step )
 
 		# if a.U is not None:
 		# 	x = np.linspace(-1.0, 2.0, 100)
@@ -80,8 +58,6 @@ class Simulation:
 		# self.ax_potential.set_title('Potential')
 		# plt.sca(self.ax)
 
-		#ax.margins(x = 0)
-		plt.pause(0.001)
 
 
 	def run( self, tf ):
@@ -96,10 +72,15 @@ class Simulation:
 		while( c_step < m-1 ):
 			self.time[c_step] = t
 
+			start = time.time()
 			for a in self.agents:
 				a.step( c_step, self.h, t )
+			end = time.time()
 
+			print "Computation eta:  ", (end - start)
+			
 			self.draw( c_step, tf )
+			
 			c_step += 1
 			t += self.h
 

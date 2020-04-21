@@ -38,7 +38,6 @@ class Body:
 			  (np.linalg.norm(self.v) > 0.0)  else 0.0
 		#and (F1 < 0.1 and F2 < 0.1)
 
-		print "Fmu: ", Fmu
 		Fmu_theta = 10*self.dtheta if \
 			  (np.linalg.norm(self.dtheta) > 0.0) else 0.0
 

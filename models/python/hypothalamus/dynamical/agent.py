@@ -51,7 +51,7 @@ class AgentBuilder:
 
 class Agent:
 
-	def __init__(self, environment, brain, x, y, theta, radius = 2.0 ):
+	def __init__(self, environment, brain, x, y, theta, radius = 2.0, record = [] ):
 		
 		self.body = Body(x, y, theta0 = theta)
 		# Setting up brain and recorder
@@ -99,19 +99,12 @@ class Agent:
 		
 		self.updateSensorPositions( x, y, theta )
 
-	def draw( self, c_step, offset ):
-		x, y = self.body.getPosition()
-		fig = plt.gcf()
-		ax = fig.gca()
-		self.recorder.plotTrace( ax, c_step, offset )		
-		x = x + offset[0]
-		y = y + offset[1]
-		c = plt.Circle( (x, y), self.body.radius, color = 'k' )	
-		ax.add_artist(c)
+	def draw( self, c_step, graphics ):
+		x, y = self.body.getPosition()	
+		self.recorder.plotTrace( ax, c_step, graphics )
+		graphics.circle( x, y, self.body, color = 'k' )			
 
 		for s in self.sensors:
-			p1 = s.pos		 
-			cs1 = plt.Circle( (p1[0] + offset[0], p1[1] + offset[1]), 1, color = [0.5,0.5,0.5] )
-			ax.add_artist(cs1)
+			graphics.circle( s.pos[0], s.pos[1], 1.0, color = [0.5,0.5,0.5] )
 		
 		
