@@ -55,8 +55,7 @@ class Agent:
 		
 		self.body = Body(x, y, theta0 = theta)
 		# Setting up brain and recorder
-		self.recorder = Recorder( brain.state_labels )
-		brain.setRecorder( self.recorder )
+		self.recorder = Recorder( brain )
 		brain.setBody( self.body )
 		self.brain = brain
 		self.environment = environment
@@ -83,28 +82,20 @@ class Agent:
 
 	def reset( self, tf, h ):
 		m = int(tf/h)
-		self.brain.reset( m )
+		self.recorder.reset( m + 1 )
+		self.brain.reset()
 		self.body.reset()
 
-	def step( self, c_step, h, t ):
-		
+	def step( self, h, t ):
 		x,y = self.body.getPosition()
-		self.recorder.recordPosition( x, y, c_step )
+
+		self.recorder.recordSnapshot( t, x, y, self.brain )
 
 		F = self.environment.getFood( x, y )
-		self.brain.step(c_step, h, t, F)
+		self.brain.step( h, t, F )
 
 		x,y = self.body.getPosition()
 		theta = self.body.getOrientation()
 		
 		self.updateSensorPositions( x, y, theta )
-
-	def draw( self, c_step, graphics ):
-		x, y = self.body.getPosition()	
-		self.recorder.plotTrace( ax, c_step, graphics )
-		graphics.circle( x, y, self.body, color = 'k' )			
-
-		for s in self.sensors:
-			graphics.circle( s.pos[0], s.pos[1], 1.0, color = [0.5,0.5,0.5] )
-		
 		

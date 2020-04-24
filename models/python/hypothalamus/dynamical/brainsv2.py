@@ -10,9 +10,19 @@ class Brain (object):
 		self.state_labels = None
 		self.dx = [0, 0]
 		self.body = None
+		self.variables = {}
 
-	def setRecorder( self, recorder ):
-		self.recorder = recorder
+	def getAvailableVariables( self ):
+		if self.variables is not None:
+			return self.variables.keys()
+		else:
+			return []
+
+	def queryVariable( self, name ):
+		if name in self.variables.keys():
+			return self.variables[name]
+		else:
+			return 0.0 # silent
 
 	def setBody( self, body ):
 		self.body = body
@@ -23,23 +33,19 @@ class Brain (object):
 	def dmap( self, t, h, rewards ):
 		pass
 
-	def step(self, c_step, h, t, reward ):
+	def step(self, h, t, reward ):
 
 		assert self.body is not None, 'No body model'  
 
-		self.recorder.recordState( self.state, c_step )
 		wheel_force, di = self.dmap( t, h, reward )
 		
 		if self.state is not None and len(di) > 0:
 			self.state = self.state + h*di
 
-		self.body.step( c_step, h, wheel_force )
+		self.body.step( h, wheel_force )
 
-	def reset( self, m ):
+	def reset( self ):
 		self.state = self.s0
-
-		if self.recorder is not None:
-			self.recorder.reset( m, self.s0, [])
 
 class SimpleBrain( Brain ):
 	def __init__( self ):
@@ -54,9 +60,7 @@ class SimpleBrain( Brain ):
 		Tb = (Tl + Tr)/2.0
 		e = (Tb - 37.0)/40.0
 
-		print "e : ", e
 		if np.abs(Tl - Tr) < 0.1:
-			print "Correcting"
 			r = np.random.random()
 			Tl += np.abs(e) if r > 0.5 else 0.0
 			Tr += np.abs(e) if r < 0.5 else 0.0
@@ -156,8 +160,7 @@ class MotivationalBrain( Brain ):
 
 	def motor_map2( self ):
 		vmax = 5.0
-		sigma_c = 0.5
-		
+		sigma_c = 0.5		
 
 		ft = lambda x : np.pi*x/15.0 if abs(x)<15.0 else np.pi*np.sign(x)
 		gc = lambda x,x0: np.exp(-(x - x0)**2/(2*sigma_c**2))/np.sqrt(2*np.pi*sigma_c**2)
@@ -182,10 +185,13 @@ class MotivationalBrain( Brain ):
 
 		T_app = np.heaviside( dT, 0.5 )*np.abs(Dtemp)
 		T_avoid = np.heaviside( -dT, 0.5 )*np.abs(Dtemp)
-		F_app = np.heaviside( Dfood, 0.5 )*np.abs(Dfood)
-		F_avoid = np.heaviside( -Dfood, 0.5 )*np.abs(Dfood)
+		F_app = np.heaviside( -Dfood, 0.5 )*np.abs(Dfood)
+		F_avoid = np.heaviside( Dfood, 0.5 )*np.abs(Dfood)
 
-		# print "T_app: ", T_app, ", T_avoid: ", T_avoid
+		print "T_app: ", T_app, ", T_avoid: ", T_avoid
+		print "F_app: ", F_app, ", F_avoid: ", F_avoid
+		print "mu_food: ", mu_food
+		print "mu_temp: ", mu_temp
 		F_temp = T_app*B + T_avoid*A
 		F_food = F_app*B + F_avoid*A
 		M_temp = mu_temp*F_temp

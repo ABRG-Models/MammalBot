@@ -2,46 +2,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Recorder:
-	def __init__( self, state_labels ):
+	def __init__( self, brain ):
 		self.data = {}
-		self.state_labels = state_labels
-		
+		self.state = {}
+		self.state_labels = brain.state_labels
+		self.time = []
 
-	def reset( self, m, state, variables ):
-		self.trace = np.zeros( (2, m) )		
-		self.state = np.zeros( (len(self.state_labels), m) )
+		for v in  brain.state_labels:
+			self.state[v] = []
 
-		for v in variables:
+		self.variables = brain.getAvailableVariables()
+		self.step = 0		
+
+	def reset( self, m ):
+		self.trace = np.zeros( (2, m) )	
+		self.time = np.zeros(m)
+
+		for v in self.state_labels:
+			self.state[v] = np.zeros( m )
+
+		self.step = 0
+
+		print("Initializing recorder: ", m)
+
+		for v in self.variables:
 			self.data[v] = np.zeros(m)
 
-	def recordState( self, state, step ):
-		self.state[:,step] = state
+	def recordSnapshot( self, t, x, y, brain ):
+		for i in range(len(brain.state_labels)):
+			self.state[self.state_labels[i]][self.step] = brain.state[i]
 
-	def recordPosition( self, x, y, step ):
-		self.trace[:,step] = [x,y]
+		self.trace[:,self.step] = [x,y]
+		self.time[self.step] = t
 
-	def recordVariable( self, name, value, step ):
-		if name not in self.data:
-			raise Exception('Recorder exception', 'The variable has not been set up to be recorded')
+		for name in self.variables:
+			self.data[name][self.step] = brain.queryVariable( name )
 
-		self.data[name][step] = value 
+		self.step += 1
 
-	def plotStateVariables( self, graphics, time, step):
-		if len(self.state_labels) == 0:
-			return 
-			
-		if name not in self.state_labels:
-			raise Exception('Recorder error', 'Name not a state variable')
+	def getStateData( self, name ):
+		return self.state[name][0:self.step]
 
-		idx = self.state_labels.index(name)
-		#plt.sca(ax)	
-		#plt.cla()
+	def getTrace( self ):
+		return self.trace[:,0:self.step]
 
-		graphics.plot( xdata, ydata, name )
+	def getTime( self ):
+		return self.time[0:self.step]
+
+	def getVariableData( self, name ):
 		
-
-	def registerVariable( self, name, pos, alias = None, axis = None  ):
-
-
-	def plotTrace( self, graphics, step ):
-		graphics.trace( self.trace[0,:step], self.trace[1,:step] )
+		if name in self.variables.keys():
+			return self.data[name]
+		else:
+			return []

@@ -26,7 +26,7 @@ class Body:
 		self.v = self.v0
 		self.x = self.x0
 
-	def step( self, c_step, h, drive_wheels ):
+	def step( self, h, drive_wheels ):
 	# drive_wheels expected to be a two dimensional vector v \in [0,1]x[0,1]
 
 		d = self.radius
