@@ -9,7 +9,7 @@ from graphics import *
 from agent import *
 import time
 
-from PyQt5.QtCore import pyqtSignal, QRunnable, QObject
+from PyQt5.QtCore import pyqtSignal, QRunnable, QObject, QMutex
 
 
 # --------------------------------------------------------------------
@@ -18,6 +18,7 @@ from PyQt5.QtCore import pyqtSignal, QRunnable, QObject
 class Simulation( QRunnable ):
 	def __init__(self, xmin, xmax, maxT = 10.0 ):
 		super( Simulation, self ).__init__()
+		
 		self.h = 0.01
 		self.maxT = maxT
 		self.model = Model( xmin, xmax )
@@ -35,8 +36,12 @@ class Simulation( QRunnable ):
 		self.is_pause = not(self.is_pause)
 		self.signals.pause.emit()
 
+	def resume( self ):
+		self.is_pause = False
+
 	def run( self ):		
 		self.t = 0.0
+		mutex = QMutex()
 
 		self.signals.start.emit()
 
@@ -49,7 +54,9 @@ class Simulation( QRunnable ):
 			if self.is_pause:
 				continue
 
+			mutex.lock()
 			self.model.step( self.h, self.t )
+			mutex.unlock()
 			# Emit drawing signal
 			self.signals.draw.emit( self.model )
 			# pause time
@@ -62,7 +69,7 @@ class Simulation( QRunnable ):
 
 
 class Model:
-	def __init__( self, xmin, xmax ):
+	def __init__( self, xmin=0, xmax=1 ):
 		self.environment = Environment( xmin, xmax )
 		self.agents = []
 		self.observed = None

@@ -15,7 +15,7 @@ class Body:
 		self.dx = v0
 		self.x = np.array([x0, y0])
 		self.gamma = 100.0
-		self.mu = 0.5
+		self.mu = 2.0
 		self.m = 1.0
 		self.kappa = 0.1
 		self.A = 2*np.pi*radius
@@ -38,7 +38,7 @@ class Body:
 			  (np.linalg.norm(self.v) > 0.0)  else 0.0
 		#and (F1 < 0.1 and F2 < 0.1)
 
-		Fmu_theta = 10*self.dtheta if \
+		Fmu_theta = 30*self.dtheta if \
 			  (np.linalg.norm(self.dtheta) > 0.0) else 0.0
 
 		F_left = F1 - Fmu
