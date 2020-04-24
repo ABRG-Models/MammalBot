@@ -4,15 +4,13 @@ import matplotlib.pyplot as plt
 # Enviroment: Manages enviroment drawing and signals
 # --------------------------------------------------------------------
 class Environment:
-	def __init__( self ):
-		self.w = 100
-		self.h = 100
+	def __init__( self, xmin, xmax ):
 		self.food_sources = []
 		sigma = 30.0
 		self.g = lambda x,y,x0,y0: np.exp(-(( x - x0)**2 + (y - y0)**2)/(2*sigma**2) )
 		self.Tmin = 15.0
 		self.Tmax = 45.0
-		self.T = lambda x,y : ((self.Tmax - self.Tmin)/self.w)*x + self.Tmin
+		self.T = lambda x,y : ((self.Tmax - self.Tmin)/(xmax - xmin))*(x - xmin) + self.Tmin
 		self.time = None
 		self.ax_gradient = None
 
@@ -39,14 +37,6 @@ class Environment:
 
 			if( np.linalg.norm(np.array([x-x0, y-y0])) < 3.0 ):
 				print( 'Got food source' )
-				return 1.0
+				return 10.0
 			
 		return 0.0
-
-	def draw( self, graphics ):
-		delta = 1.0
-		graphis.drawGradient()	
-
-		for i in range(len(self.food_sources)):
-			x0,y0 = self.food_sources[i]
-			graphics.drawFoodSources( x0, y0 )
