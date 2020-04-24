@@ -4,7 +4,6 @@ from recorder import *
 class Brain (object):
 	def __init__( self ):
 		self.sensors = {}
-		self.recorder = None
 		self.state = None
 		self.s0 = None
 		self.state_labels = None
@@ -41,6 +40,11 @@ class Brain (object):
 		
 		if self.state is not None and len(di) > 0:
 			self.state = self.state + h*di
+
+			for i in range(len(self.state)):
+				if self.state[i] < 0:
+					self.state[i] = 0.0
+					# print "Stage gone negative!"
 
 		self.body.step( h, wheel_force )
 
@@ -185,8 +189,8 @@ class MotivationalBrain( Brain ):
 
 		T_app = np.heaviside( dT, 0.5 )*np.abs(Dtemp)
 		T_avoid = np.heaviside( -dT, 0.5 )*np.abs(Dtemp)
-		F_app = np.heaviside( -Dfood, 0.5 )*np.abs(Dfood)
-		F_avoid = np.heaviside( Dfood, 0.5 )*np.abs(Dfood)
+		F_app = np.heaviside( Dfood, 0.5 )*np.abs(Dfood)
+		F_avoid = np.heaviside( -Dfood, 0.5 )*np.abs(Dfood)
 
 		print "T_app: ", T_app, ", T_avoid: ", T_avoid
 		print "F_app: ", F_app, ", F_avoid: ", F_avoid
@@ -199,7 +203,7 @@ class MotivationalBrain( Brain ):
 
 		wheel_drive = np.dot(M_temp, sensors_temp) +\
 					  np.dot(M_food, sensors_food) + \
-					  (np.random.random(2)-0.5)*0.1
+					  (np.random.random(2)-0.5)*0.01
 
 		# print "Wheel drive: ", wheel_drive
 

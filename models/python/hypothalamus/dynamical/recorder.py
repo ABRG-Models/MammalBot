@@ -2,10 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Recorder:
-	def __init__( self, brain ):
+	def __init__( self, brain = None ):
 		self.data = {}
 		self.state = {}
-		self.state_labels = brain.state_labels
+		
+		if brain is None:
+			self.state_labels = []
+		else:
+			self.state_labels = brain.state_labels
+
 		self.time = []
 
 		for v in  brain.state_labels:

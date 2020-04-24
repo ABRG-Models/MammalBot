@@ -98,4 +98,3 @@ class Agent:
 		theta = self.body.getOrientation()
 		
 		self.updateSensorPositions( x, y, theta )
-		
