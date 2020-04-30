@@ -51,12 +51,14 @@ class AgentBuilder:
 
 class Agent:
 
-	def __init__(self, environment, brain, x, y, theta, radius = 2.0, record = [] ):
+	def __init__(self, environment, brain, x, y, theta, radius = 2.0 ):
 		
 		self.body = Body(x, y, theta0 = theta)
 		# Setting up brain and recorder
-		self.recorder = Recorder( brain )
-		brain.setBody( self.body )
+		if brain is not None:
+			self.recorder = Recorder( brain )
+			brain.setBody( self.body )
+
 		self.brain = brain
 		self.environment = environment
 		self.sensors = []
@@ -98,3 +100,13 @@ class Agent:
 		theta = self.body.getOrientation()
 		
 		self.updateSensorPositions( x, y, theta )
+
+	def clone( self ):
+		a = Agent( self.environment, None, self.body.x[0], self.body.x[1], self.body.theta )
+		
+		a.recorder = self.recorder.clone()
+		a.sensors = [s.clone() for s in self.sensors]
+
+		return a
+
+

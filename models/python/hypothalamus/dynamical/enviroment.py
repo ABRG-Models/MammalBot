@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 class Environment:
 	def __init__( self, xmin, xmax ):
 		self.food_sources = []
-		sigma = 80.0
+		sigma = 100.0
 		self.g = lambda x,y,x0,y0: np.exp(-(( x - x0)**2 + (y - y0)**2)/(2*sigma**2) )
 		self.Tmin = 15.0
 		self.Tmax = 45.0
@@ -37,6 +37,6 @@ class Environment:
 
 			if( np.linalg.norm(np.array([x-x0, y-y0])) < 10.0 ):
 				print( 'Got food source' )
-				return 0.5
+				return 0.3
 			
 		return 0.0

@@ -15,6 +15,11 @@ class Sensor(object):
 	def getReading( self ):
 		pass
 
+	def clone( self ):
+		s = Sensor( self.ego_angle, self.environment )
+		s.pos = [self.pos[0], self.pos[1]]
+		return s
+
 class TemperatureSensor( Sensor ):
 	def __init__( self, ego_angle, environment ):
 		super(TemperatureSensor, self).__init__(ego_angle, environment)

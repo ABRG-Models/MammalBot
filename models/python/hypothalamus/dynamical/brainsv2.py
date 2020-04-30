@@ -10,14 +10,17 @@ class Brain (object):
 		self.dx = [0, 0]
 		self.body = None
 		self.variables = {}
+		self.preferred = {}
 
 	def getAvailableVariables( self ):
+
 		if self.variables is not None:
 			return self.variables.keys()
 		else:
 			return []
 
 	def queryVariable( self, name ):
+
 		if name in self.variables.keys():
 			return self.variables[name]
 		else:
@@ -25,6 +28,10 @@ class Brain (object):
 
 	def setBody( self, body ):
 		self.body = body
+
+	def getPreferredValue( self, name ):
+		# To-do validation
+		return self.preferred[name]
 
 	def registerSensor( self, name, sensor ):
 		self.sensors[name] = sensor
@@ -82,10 +89,12 @@ class SimpleBrain( Brain ):
 
 class MotivationalBrain( Brain ):
 
-	def __init__( self, Tb, E, k1 = 0.99, G = 0.4, Tp = 37.0, Ep = 1.0, A = 1.0 ):
+	def __init__( self, Tb, E, k1 = 0.99, G = 0.5, Tp = 37.0, Ep = 1.0, A = 1.0 ):
 		super(MotivationalBrain, self).__init__()
 		self.s0 = np.array([Tb, E, 0.0]); # Tb, E, rho
 		self.state_labels = ['Tb', 'E', 'Rho']
+		self.preferred = {'Tb' : Tp, 'E': Ep, 'Rho': None}
+		self.variables = {'dFood': 0.0, 'dTemp': 0.0, 'mu_heat': 0.0, 'mu_food': 0.0}
 
 		self.G = G # Heat generation rate
 		self.k1 = k1
@@ -93,7 +102,7 @@ class MotivationalBrain( Brain ):
 		self.Ep = Ep
 		self.A = A
 		self.k2 = 1.0
-		self.diff_heat = 0.1
+		self.diff_heat = 0.2
 
 		self.initMaps()
 
@@ -122,26 +131,27 @@ class MotivationalBrain( Brain ):
 		Ta = (Tl + Tr)/2.0
 
 		# Computing physiological state
-		alpha = 0.1
+		alpha = 0.01
 		Tc = Tb # No contact
 		dTb = self.G - self.k1*(Tb - Ta)*self.A - self.k2*(1 - self.A)*(Tb - Tc)
 		dE = -alpha*self.G + F
 
 		# Setting up the drives
-		dFood = self.D_food( E - self.Ep )
-		dTemp = self.D_temp( Tb - self.Tp )
+		self.variables['dFood'] = self.D_food( E - self.preferred['E'] )
+		self.variables['dTemp'] = self.D_temp( Tb - self.preferred['Tb'] )
 
 		# print "Drive temp: ", dTemp, "- diff: ", (Tb - self.Tp)
 		# print "Drive E", dFood
 		
-		return dTb, dE, dTemp, dFood
+		return dTb, dE
 
-	def motivation_map( self, h, rho, dTemp, dFood ):
-		L = 10.0
+	def motivation_map( self, h, rho ):
+		L = 20.0
 
 		# Competition parameters
-		a = np.abs(dTemp)
-		b = np.abs(dFood)
+		a = np.abs(self.variables['dTemp'])
+		b = np.abs(self.variables['dFood'])
+
 
 		U = lambda rho: (1.0/4.0)*rho**2*(1 - rho)**2 + a*rho**2 + b*(1 - rho)**2
 		dU = lambda rho: (1.0/2.0)*(rho*((1-rho)**2 + a) - (1-rho)*(rho**2 + b))
@@ -154,13 +164,13 @@ class MotivationalBrain( Brain ):
 	def incentives_map( self, rho ):
 		TEMP_STATE, FOOD_STATE = 0, 1
 
-		mu_heat = self.xi(rho, TEMP_STATE)
-		mu_food = self.xi(rho, FOOD_STATE)
+		self.variables['mu_heat'] = self.xi(rho, TEMP_STATE)
+		self.variables['mu_food'] = self.xi(rho, FOOD_STATE)
 
 		# print "Incentive temp: ", mu_heat
 		# print "Incentive food: ", mu_food
 		
-		return mu_heat, mu_food
+		return self.variables['mu_heat'], self.variables['mu_food']
 
 	def motor_map2( self ):
 		vmax = 5.0
@@ -177,25 +187,25 @@ class MotivationalBrain( Brain ):
 
 		return np.array([dx[0], dx[1], dTheta])
 
-	def motor_map( self, mu_temp, mu_food, Dtemp, Dfood, Tl, Tr, Fl, Fr ):
+	def motor_map( self, mu_temp, mu_food, Tl, Tr, Fl, Fr ):
 		A = np.matrix([[1.0, 0.0],[0.0, 1.0]])
 		B = np.matrix([[0.0, 1.0],[1.0, 0.0]])
-		sensors_temp = np.array([Tl, Tr])/30.0
+		sensors_temp = np.array([Tl, Tr])/40.0
 		# print sensors_temp
 		sensors_food = np.array([Fl, Fr])
 
 		Ta = (Tl + Tr)/2.0
-		dT = Ta - self.Tp
+		dT = Ta - self.preferred['Tb']
 
-		T_app = np.heaviside( dT, 0.5 )*np.abs(Dtemp)
-		T_avoid = np.heaviside( -dT, 0.5 )*np.abs(Dtemp)
-		F_app = np.heaviside( Dfood, 0.5 )*np.abs(Dfood)
-		F_avoid = np.heaviside( -Dfood, 0.5 )*np.abs(Dfood)
+		T_app = np.heaviside( dT, 0.5 )*np.abs(self.variables['dTemp'])
+		T_avoid = np.heaviside( -dT, 0.5 )*np.abs(self.variables['dTemp'])
+		F_app = np.heaviside( self.variables['dFood'], 0.5 )*np.abs(self.variables['dFood'])
+		F_avoid = np.heaviside( -self.variables['dFood'], 0.5 )*np.abs(self.variables['dFood'])
 
-		print "T_app: ", T_app, ", T_avoid: ", T_avoid
-		print "F_app: ", F_app, ", F_avoid: ", F_avoid
-		print "mu_food: ", mu_food
-		print "mu_temp: ", mu_temp
+		# print "T_app: ", T_app, ", T_avoid: ", T_avoid
+		# print "F_app: ", F_app, ", F_avoid: ", F_avoid
+		# print "mu_food: ", mu_food
+		# print "mu_temp: ", mu_temp
 		F_temp = T_app*B + T_avoid*A
 		F_food = F_app*B + F_avoid*A
 		M_temp = mu_temp*F_temp
@@ -203,7 +213,7 @@ class MotivationalBrain( Brain ):
 
 		wheel_drive = np.dot(M_temp, sensors_temp) +\
 					  np.dot(M_food, sensors_food) + \
-					  (np.random.random(2)-0.5)*0.01
+					  (np.random.random(2)-0.5)*0.00
 
 		# print "Wheel drive: ", wheel_drive
 
@@ -219,10 +229,11 @@ class MotivationalBrain( Brain ):
 		E = self.state[1]
 		rho = self.state[2]
 
-		dTb, dE, dTemp, dFood = self.drive_map(Tb, E, Tl, Tr, Fr, Fl, rewards)
-		dRho = self.motivation_map( h, rho, dTemp, dFood )
+		dTb, dE = self.drive_map(Tb, E, Tl, Tr, Fr, Fl, rewards)
+		dRho = self.motivation_map( h, rho )
 		mu_temp, mu_food = self.incentives_map( rho )
 		# Define wheel forces
-		wheel_drive = self.motor_map( mu_temp, mu_food, dTemp, dFood, Tl, Tr, Fl, Fr )
+		wheel_drive = self.motor_map( mu_temp, mu_food, Tl, Tr, Fl, Fr )
+
 
 		return wheel_drive, np.array([dTb, dE, dRho])

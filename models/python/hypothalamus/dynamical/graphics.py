@@ -1,12 +1,17 @@
 import pyqtgraph as pg
+import pyqtgraph.widgets.RemoteGraphicsView
 
 import sys, os
-from PyQt5.QtCore import Qt, QThreadPool, QRectF, pyqtSlot
+from PyQt5.QtCore import Qt, QThreadPool, QRectF, pyqtSlot, QMutex, QPoint
 from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QHBoxLayout, QVBoxLayout, QToolBar, QWidget, QAction, QStatusBar, QOpenGLWidget
-from PyQt5.QtGui import QPen, QBrush, QColor, QPixmap, QPainter, QSurfaceFormat, QLinearGradient, QIcon, QLineEdit, QPainterPath
+from PyQt5.QtGui import QPen, QBrush, QColor, QPixmap, QPainter, QSurfaceFormat, QLinearGradient, QIcon, QLineEdit, QPainterPath, QComboBox, QRegion
 
 from simulation import *
 import time 
+import datetime
+
+pg.setConfigOption( 'background', 'w' )
+pg.setConfigOption( 'foreground', 'k' )
 
 class MainWindow(QMainWindow):
 
@@ -39,15 +44,21 @@ class MainWindow(QMainWindow):
 		pw = 350
 		ph = 150
 
+		# self.plotView1 = pg.widgets.RemoteGraphicsView.RemoteGraphicsView()
+		# self.plotView1.setFixedWidth( pw+10 )
+		# self.plotView1.pg.setConfigOptions(antialias=True)
+	
 		self.plotTop = pg.PlotWidget()
 		self.plotTop.setFixedWidth( pw )
 		self.plotTop.setFixedHeight( ph )
 		self.plotTopData = self.plotTop.plot([0],[0])
+		# self.plotView1.setCentralItem( self.plotTop )
 
 		self.plotMiddle = pg.PlotWidget()
 		self.plotMiddle.setFixedWidth( pw )
 		self.plotMiddle.setFixedHeight( ph )
 		self.plotMiddleData = self.plotMiddle.plot([0],[0])
+
 
 		self.plotBottom = pg.PlotWidget()
 		self.plotBottom.setFixedWidth( pw )
@@ -57,6 +68,7 @@ class MainWindow(QMainWindow):
 		right_layout.addWidget( self.plotTop )
 		right_layout.addWidget( self.plotMiddle )
 		right_layout.addWidget( self.plotBottom )
+		right_layout.setContentsMargins( 0, 0, 0, 0 )
 
 		# Building main layour
 		main_layout.setContentsMargins( 0, 0, 0, 0 )
@@ -64,9 +76,9 @@ class MainWindow(QMainWindow):
 		main_layout.addLayout( left_layout )		
 		main_layout.addLayout( right_layout )
 		
-		widget = QWidget()
-		widget.setLayout( main_layout )
-		self.setCentralWidget( widget )
+		self.widget = QWidget()
+		self.widget.setLayout( main_layout )
+		self.setCentralWidget( self.widget )
 
 		toolbar = QToolBar( "Some toolbar" )
 		self.addToolBar( toolbar )
@@ -90,43 +102,98 @@ class MainWindow(QMainWindow):
 		self.stop_action.triggered.connect( self.onStopClick )
 		self.stop_action.setEnabled( False )
 
+		self.plots_action = QAction( "Plots", self )
+		self.plots_action.setIcon( QIcon("icons/plot.png") )
+		self.plots_action.setStatusTip( "Shows additional plots" )
+		self.plots_action.triggered.connect( self.onPlotsClick )
+
+		self.screenshot_action = QAction( "Screenshot", self )
+		self.screenshot_action.setStatusTip( "Saves screenshot" )
+		self.screenshot_action.triggered.connect( self.onScreenShotClick )
+
+		# self.plots_action.setEnabled( False )
+
+		self.foodx = QLineEdit("-20")
+		self.foodx.setFixedWidth( 50 )
+		self.foody = QLineEdit("20")
+		self.foody.setFixedWidth( 50 )
+
 		toolbar.addAction( self.run_action )
 		toolbar.addWidget( self.run_text )
 		toolbar.addWidget( QLabel("ms") )
 		toolbar.addAction( self.pause_action )
 		toolbar.addAction( self.stop_action )
+		toolbar.addAction( self.plots_action )
+		toolbar.addAction( self.screenshot_action )
+		toolbar.addWidget( QLabel("Food position:") )
+		toolbar.addWidget( self.foodx )
+		toolbar.addWidget( self.foody )
 
 		self.statusb = QStatusBar( self )
 		self.setStatusBar( self.statusb )
 
 		self.simulation = None
-		self.signals = GraphicSignals()
-		self.plotUpdater = PlotUpdater( self )
-		self.threadpool.start( self. plotUpdater )
+		self.signals = GraphicSignals()		
+		self.plots = PlotsWindow( self )
+
+		self.agentPos = [20.0, 40.0]
+		
+	def onScreenShotClick( self, ev ):
+		pixmap = QPixmap( self.widget.rect().width(), self.widget.rect().height() )
+		painter = QPainter()
+		painter.begin( pixmap )
+		self.widget.render( painter, QPoint(), QRegion(self.widget.rect()) )
+		painter.end()
+		pixmap.save("screen" + str(datetime.datetime.now().strftime("%I_%M_%S")) + ".png")
+
+	def onPlotsClick( self, ev ):
+		self.plots.show()
 		
 	def showEvent( self, ev ):
+		print( "main window shown")
 		super(MainWindow, self).showEvent(ev)
-		self.runSimulation(0.2)
+		self.scanvas.initCanvas()
 
 
-	def initPlots( self ):
+	def initPlots( self, model ):
+		self.plotUpdater = PlotUpdater( self )
+		# self.threadpool.start( self.plotUpdater )
+
+		ao = model.getObservedAgent()
+
 		self.topPlotData = {'name' : 'Rho'}
 		self.middlePlotData = {'name' : 'Tb'}
 		self.bottomPlotData = {'name' : 'E'}
+
 		self.plotTop.setTitle( self.topPlotData['name'] )
 		self.plotTop.setXRange( 0, self.simulation.maxT )
 		self.plotTop.setYRange( -0.5, 1.5 )
+		# Middle plot
 		self.plotMiddle.setTitle( self.middlePlotData['name'] )
+		vp = ao.brain.getPreferredValue(self.middlePlotData['name'])
+		self.plotMiddle.plot([0, self.simulation.maxT],[vp, vp], pen = (5, 9))
 		self.plotMiddle.setXRange( 0, self.simulation.maxT )
 		self.plotMiddle.setYRange( 15, 50 )
+		# Bottom plot
 		self.plotBottom.setTitle( self.bottomPlotData['name'] )
+		vp = ao.brain.getPreferredValue(self.bottomPlotData['name'])
+		self.plotBottom.plot([0, self.simulation.maxT],[vp, vp], pen = (5, 9))
 		self.plotBottom.setXRange( 0, self.simulation.maxT )
 		self.plotBottom.setYRange( 0, 1.5 )
 
+		# Initializing plots window
+		if self.plots is not None:
+			self.plots.populate(  model )
+
+
 	def draw( self, model ):
+		self.plotUpdater.collectData( model )
 		self.scanvas.updateGraphics( model )
 		pm = "(paused)" if self.simulation.is_pause else ""
 		self.statusb.showMessage( "Simulation running t = " + str(self.simulation.t) + pm )
+
+		self.plotUpdater.updatePlots( model )
+
 
 	def start( self ):
 		print( "Simulation started" )
@@ -139,6 +206,7 @@ class MainWindow(QMainWindow):
 		self.run_action.setEnabled( True )
 		self.pause_action.setEnabled( False )
 		self.stop_action.setEnabled( False )
+		self.plotUpdater.stop()
 
 	def pause( self ):
 		self.statusb.showMessage( "Simulation paused" )
@@ -159,61 +227,109 @@ class MainWindow(QMainWindow):
 		
 		self.simulation = Simulation( xmin, xmax, maxT )
 		#a = AgentBuilder.buildSimpleTemperatureAgent( self.simulation.model.environment, 20.0, 20.0 )
-		a = AgentBuilder.buildMotivationalAgent( self.simulation.model.environment, 20.0, 20.0 )		
+		a = AgentBuilder.buildMotivationalAgent( self.simulation.model.environment, self.agentPos[0], self.agentPos[1] )		
 
 		self.simulation.model.addAgent( a )
-		self.simulation.model.addFoodSource(  -0.0, 0.0  )
+		self.simulation.model.addFoodSource( float(self.foodx.text()), float(self.foody.text()) )
+
+		self.initPlots( self.simulation.model )
 
 		self.simulation.signals.draw.connect( self.draw )
-		self.simulation.signals.draw.connect( self.plotUpdater.updatePlots )
 		self.simulation.signals.start.connect( self.start )
 		self.simulation.signals.finish.connect( self.finish )
 		self.simulation.signals.pause.connect( self.pause )
-
 		self.signals.plottingCompleted.connect( self.simulation.resume )
 
-		self.initPlots()
 		self.threadpool.start( self.simulation )
+
+class PlotsWindow( QMainWindow ):
+	def __init__( self, parent ):
+		super( PlotsWindow, self ).__init__( parent )
+		self.setFixedSize( 600, 400 )
+		self.plot = pg.PlotWidget()
+		self.plotDataItem = self.plot.plot([0],[0])
+		self.combo = QComboBox()
+		self.combo.currentIndexChanged.connect( self.comboChanged )
+		layout = QVBoxLayout()
+		layout.addWidget( self.plot )
+		layout.addWidget( self.combo )
+		lbl = QLabel()
+		lbl.setLayout( layout )
+		self.setCentralWidget(lbl)
+		self.currentPlot = None
+
+	def populate( self, model ):
+		ao = model.getObservedAgent()
+		variables = ao.brain.getAvailableVariables()
+		self.combo.clear()
+
+		if len(variables) > 0:
+			self.combo.addItems( variables )
+			self.currentPlot = variables[0]
+			self.plot.setTitle( variables[0] )
+		else:
+			self.combo.addItem( "No variables to plot" )
+
+	def comboChanged( self, ev ):
+		self.currentPlot = self.combo.currentText()
+
 
 class GraphicSignals( QObject ):
 	plottingCompleted = pyqtSignal()
 
-class PlotUpdater( QRunnable ):
+class PlotUpdater():
 	def __init__( self, window ):
-		super( PlotUpdater, self ).__init__()
+		# super( PlotUpdater, self ).__init__()
 		self.model = None
 		self.window = window
+		self.pen = pg.mkPen( 'k', width=3.0 )
+		self.plotting = False
 
 	def updatePlots( self, model ):
 		self.model = model
 
-	def plotVariables( self, model ):
+		if not self.plotting:
+			self.plotting = True
+			self.plotVariables( model )
+			
+	def collectData( self, model ):
 		ao = model.getObservedAgent()
+		recorder = ao.recorder.clone()
+		self.x = recorder.getTime()
+		self.y_top = recorder.getStateData( self.window.topPlotData['name'] )		
+		self.y_middle = recorder.getStateData( self.window.middlePlotData['name'] )		
+		self.y_bottom = recorder.getStateData( self.window.bottomPlotData['name'] )
 
-		x = ao.recorder.getTime()
-		y_top = ao.recorder.getStateData( self.window.topPlotData['name'] )		
-		y_middle = ao.recorder.getStateData( self.window.middlePlotData['name'] )		
-		y_bottom = ao.recorder.getStateData( self.window.bottomPlotData['name'] )	
+	def plotVariables( self, model ):			
+		# y_var = ao.recorder.getVariableData( self.window.plots.currentPlot )
 		#self.plotTop.clear()
-		self.window.plotTopData.setData(x, y_top)
+		self.window.plotTopData.setData(self.x, self.y_top, pen = self.pen, _callSync='off')
 		QApplication.processEvents()
-
 		#self.plotMiddle.clear()
-		self.window.plotMiddleData.setData(x, y_middle)
+		self.window.plotMiddleData.setData(self.x, self.y_middle, pen = self.pen, _callSync='off')	
+		QApplication.processEvents()
+		self.window.plotBottomData.setData(self.x, self.y_bottom, pen = self.pen, _callSync='off')
 		QApplication.processEvents()
 
-		#self.plotBottom.clear()
-		self.window.plotBottomData.setData(x, y_bottom)
-		QApplication.processEvents()
+		# Plotting plots		
+		# self.window.plots.plotDataItem.setData( x, y_var )
+		self.plotting = False
 
-	def run( self ):
-		while True:
-			if self.model is not None:
-				self.plotVariables( self.model )
-				self.model = None
+	# def run( self ):
+	# 	self.running = True
+
+	# 	while self.running:
+	# 		if self.model is not None:
+	# 			self.plotVariables( self.model )
+	# 			self.model = None
+
+	# 	print( "Plot updater stopped" )
+
+	def stop( self ):
+		self.running = False
 
 
-class SimulationCanvas( QOpenGLWidget ):
+class SimulationCanvas( QWidget ): # To-do: Investigate QOpenGLWidget
 	def __init__( self, parent, width, height ):
 		super( SimulationCanvas, self ).__init__( parent )
 
@@ -221,11 +337,28 @@ class SimulationCanvas( QOpenGLWidget ):
 		self.setFixedSize( width, height )
 		self.viewPort = ViewPort( width, height )
 		self.model = None
+		self.agentPen = QPen()
+		self.tracePen = QPen( QColor(100, 130, 100))
+		self.agentColor = QColor(150, 128, 128)
+		self.sensorsColor = QColor(50, 60, 80)
+		self.linesPen = QPen()
+		self.linesPen.setColor( QColor(230, 230, 230) )
+		self.foodPen = QPen()
+		self.foodPen.setWidth( 2 )
+		# Initializing gradient
+		self.gradient = QLinearGradient( 0, 0, self.viewPort.getWidth(), 0)
+		self.gradient.setColorAt( 0.0, QColor(0,0,255) )
+		self.gradient.setColorAt( 0.5, QColor(255,255,0) )
+		self.gradient.setColorAt( 1.0, QColor(255,0,0) )
 
-		fmt = QSurfaceFormat()
-		fmt.setSamples( 8 )
-		self.setFormat( fmt )
+		self.marksPen = QPen()
+		self.marksPen.setColor( QColor(0, 0, 0) )
+		self.marksPen.setWidth( 2.0 )
+		# fmt = QSurfaceFormat()
+		# fmt.setSamples( 16 )
+		# self.setFormat( fmt )
 
+	def initCanvas( self ):
 		self.pixmap = QPixmap("icons/apple.png")
 
 	def updateGraphics( self, model ):
@@ -243,9 +376,8 @@ class SimulationCanvas( QOpenGLWidget ):
 			x2 = x1
 			y1 = 0
 			y2 = h
-			pen = QPen()
-			pen.setColor( QColor(230, 230, 230) )
-			painter.setPen( pen )
+			
+			painter.setPen( self.linesPen )
 			painter.drawLine( x1, y1, x2, y2 )
 
 			y1 = i*h/float(N)
@@ -264,10 +396,9 @@ class SimulationCanvas( QOpenGLWidget ):
 				xi = xn + r
 				yi = yn
 				c = (1-environment.g( xi, yi, xn, yn ))*255
-				pen = QPen()
-				pen.setWidth( 2 )
-				pen.setColor( QColor(c, c, c) ) 
-				painter.setPen( pen )
+				
+				self.foodPen.setColor( QColor(c, c, c) ) 
+				painter.setPen( self.foodPen )
 				painter.drawEllipse( QRectF( xn-r/2.0, yn-r/2.0, r, r ) )
 
 			painter.drawPixmap( xn-10, yn-10, 20, 20, self.pixmap )
@@ -276,13 +407,12 @@ class SimulationCanvas( QOpenGLWidget ):
 	def drawAgents( self, painter, agents ):
 		# Draw agents
 		r = 20
-		pen = QPen()
-		painter.setPen( pen )
+		painter.setPen( self.agentPen )
 
 		for a in agents:
 			# Trace
 			trace = a.recorder.getTrace()
-			painter.setPen( QPen( QColor(100, 130, 100), 1, Qt.DashLine) )
+			painter.setPen( self.tracePen )
 			path = QPainterPath()
 
 			m,n = trace.shape
@@ -304,14 +434,14 @@ class SimulationCanvas( QOpenGLWidget ):
 			xc = x - r/2.0
 			yc = y - r/2.0
 			#graphics.trace( self.trace[0,:step], self.trace[1,:step] )
-			pen.setWidth( 2.0 )
-			painter.setPen( pen )
-			painter.setBrush( QColor(150, 128, 128) )
+			self.agentPen.setWidth( 2.0 )
+			painter.setPen( self.agentPen )
+			painter.setBrush( self.agentColor )
 			painter.drawEllipse( xc, yc, r, r )		
 
 			rs = r/3.0
-			pen.setWidth( 1.0 )
-			painter.setBrush( QColor(50, 60, 80) )
+			self.agentPen.setWidth( 1.0 )
+			painter.setBrush( self.sensorsColor )
 			# Draw sensors
 			for s in a.sensors:
 				xs, ys = self.viewPort.transformCoordinates( s.pos[0], s.pos[1] )
@@ -330,28 +460,21 @@ class SimulationCanvas( QOpenGLWidget ):
 		self.viewPort.update( x, y )
 	
 	def drawGradient( self, painter, environment ):
-		gradient = QLinearGradient( 0, 0, self.viewPort.getWidth(), 0)
-		gradient.setColorAt( 0.0, QColor(0,0,255) )
-		gradient.setColorAt( 0.5, QColor(255,255,0) )
-		gradient.setColorAt( 1.0, QColor(255,0,0) )
-
-		painter.fillRect( 0, 0, self.viewPort.getWidth(), 10, gradient)
+		
+		painter.fillRect( 0, 0, self.viewPort.getWidth(), 10, self.gradient)
 
 		N = 10
 		w = self.viewPort.getWidth()
 		h = self.viewPort.getHeight()
 		
-
 		for i in range( 1, N ):
 			
 			x1 = i*w/float(N)
 			x2 = x1
 			y1 = 0
 			y2 = 20
-			pen = QPen()
-			pen.setColor( QColor(0, 0, 0) )
-			pen.setWidth( 2.0 )
-			painter.setPen( pen )
+			
+			painter.setPen( self.marksPen )
 			painter.drawLine( x1, y1, x2, y2 )
 
 			font = painter.font()
@@ -370,7 +493,7 @@ class SimulationCanvas( QOpenGLWidget ):
 		painter.setRenderHint( QPainter.HighQualityAntialiasing, False)
 		
 		painter.eraseRect( 0, 0, self.viewPort.getWidth(), self.viewPort.getHeight() )
-		painter.fillRect( event.rect(), QColor(255,255,255))
+		painter.fillRect( event.rect(), Qt.white)
 		
 		pen = QPen()
 		pen.setColor( QColor( 128, 128, 128 ) )

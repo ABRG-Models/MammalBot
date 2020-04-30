@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from PyQt5.QtCore import QMutex
+
+import copy
+
 class Recorder:
 	def __init__( self, brain = None ):
 		self.data = {}
@@ -10,14 +14,15 @@ class Recorder:
 			self.state_labels = []
 		else:
 			self.state_labels = brain.state_labels
+			
+			for v in  brain.state_labels:
+				self.state[v] = []
 
-		self.time = []
+			self.variables = brain.getAvailableVariables()
 
-		for v in  brain.state_labels:
-			self.state[v] = []
-
-		self.variables = brain.getAvailableVariables()
-		self.step = 0		
+		self.time = []		
+		self.step = 0	
+		self.trace = None	
 
 	def reset( self, m ):
 		self.trace = np.zeros( (2, m) )	
@@ -34,6 +39,7 @@ class Recorder:
 			self.data[v] = np.zeros(m)
 
 	def recordSnapshot( self, t, x, y, brain ):
+
 		for i in range(len(brain.state_labels)):
 			self.state[self.state_labels[i]][self.step] = brain.state[i]
 
@@ -56,7 +62,20 @@ class Recorder:
 
 	def getVariableData( self, name ):
 		
-		if name in self.variables.keys():
-			return self.data[name]
+		if name in self.variables:
+			return self.data[name][0:self.step]
 		else:
 			return []
+
+	def clone( self ):
+		# No deep copies, only the steps guaranties consistency
+		r = Recorder()
+		r.data = self.data
+		r.step = self.step
+		r.state = self.state
+		r.time = self.time
+		r.trace = self.trace
+		r.state_labels = self.state_labels
+		r.variables = self.variables
+
+		return r
