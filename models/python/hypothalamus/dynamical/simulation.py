@@ -57,12 +57,14 @@ class Simulation( QRunnable ):
 			mutex.lock()
 			self.model.step( self.h, self.t )
 			mutex.unlock()
-			# Emit drawing signal
-			self.signals.draw.emit( self.model )
+			
 			# pause time
 			self.t += self.h
+			# Emit drawing signal
+			self.signals.draw.emit( self.model )			
 
 			time.sleep( 0.01 )
+			
 
 
 		self.signals.finish.emit()
@@ -95,6 +97,14 @@ class Model:
 
 	def addFoodSource( self, x, y ):
 		self.environment.addFoodSource( x, y )
+
+	def clone( self ):
+		m = Model()
+		m.environment = self.environment
+		m.agents = [a.clone() for a in self.agents ]
+		m.observed = self.observed
+
+		return m
 
 
 class SimulationSignals( QObject  ):

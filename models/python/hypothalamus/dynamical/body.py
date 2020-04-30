@@ -8,17 +8,20 @@ class Body:
 		self.dtheta0 = dtheta0
 		self.v0 = v0
 		self.x0 = np.array([x0, y0])
-		self.theta = theta0
+		
 		self.dtheta = dtheta0
 		self.radius = radius
 		self.v = v0
 		self.dx = v0
-		self.x = np.array([x0, y0])
+		
 		self.gamma = 100.0
 		self.mu = 2.0
 		self.m = 1.0
-		self.kappa = 0.1
+		self.kappa = 0.08
 		self.A = 2*np.pi*radius
+
+		self.x = np.array([x0, y0])
+		self.theta = theta0
 
 	def reset( self ):
 		self.theta = self.theta0
@@ -38,7 +41,7 @@ class Body:
 			  (np.linalg.norm(self.v) > 0.0)  else 0.0
 		#and (F1 < 0.1 and F2 < 0.1)
 
-		Fmu_theta = 30*self.dtheta if \
+		Fmu_theta = 10*self.dtheta if \
 			  (np.linalg.norm(self.dtheta) > 0.0) else 0.0
 
 		F_left = F1 - Fmu
@@ -66,3 +69,11 @@ class Body:
 
 	def getOrientation( self ):
 		return self.theta
+
+	def clone( self ):
+		b = Body()
+		b.x =  np.array([self.x[0], self.x[1]])
+		b.theta = self.theta
+		b.radius = self.radius
+
+		return b
