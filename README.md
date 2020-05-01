@@ -19,6 +19,15 @@ components, and dashed lines indicate where compatibility may be achieved via a 
 
 ![alt text](./images/integration.png "MammalBot Infrastructure")
 
+# Motivational system
+
+The motivational system of the Mammalbot architecture has been implemented using two approaches:
+
+[A dynamical systems one](models/python/hypothalamus)
+[A neuro-computational one](models/matlab)
+
+Documentation about how to run it can be found following each of the links.
+
 # Further reading
 
 ## BRAHMS
