@@ -299,20 +299,24 @@ class PlotUpdater():
 		self.y_top = recorder.getStateData( self.window.topPlotData['name'] )		
 		self.y_middle = recorder.getStateData( self.window.middlePlotData['name'] )		
 		self.y_bottom = recorder.getStateData( self.window.bottomPlotData['name'] )
+		self.cstep = recorder.step
 
 	def plotVariables( self, model ):			
 		# y_var = ao.recorder.getVariableData( self.window.plots.currentPlot )
 		#self.plotTop.clear()
-		self.window.plotTopData.setData(self.x, self.y_top, pen = self.pen, _callSync='off')
-		QApplication.processEvents()
-		#self.plotMiddle.clear()
-		self.window.plotMiddleData.setData(self.x, self.y_middle, pen = self.pen, _callSync='off')	
-		QApplication.processEvents()
-		self.window.plotBottomData.setData(self.x, self.y_bottom, pen = self.pen, _callSync='off')
-		QApplication.processEvents()
+		if self.cstep > 0:
+			i1 = self.cstep-2
+			i2 = self.cstep+1
+			self.window.plotTop.plot(self.x[i1:i2], self.y_top[i1:i2], pen = self.pen, _callSync='off')
+			QApplication.processEvents()
+			#self.plotMiddle.clear()
+			self.window.plotMiddle.plot(self.x[i1:i2], self.y_middle[i1:i2], pen = self.pen, _callSync='off')	
+			QApplication.processEvents()
+			self.window.plotBottom.plot(self.x[i1:i2], self.y_bottom[i1:i2], pen = self.pen, _callSync='off')
+			QApplication.processEvents()
 
-		# Plotting plots		
-		# self.window.plots.plotDataItem.setData( x, y_var )
+			# Plotting plots		
+			# self.window.plots.plotDataItem.setData( x, y_var )
 		self.plotting = False
 
 	# def run( self ):
