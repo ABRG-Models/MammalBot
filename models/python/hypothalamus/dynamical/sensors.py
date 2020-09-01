@@ -34,3 +34,15 @@ class ChemicalSensor( Sensor ):
 	def getReading( self ):
 		return self.environment.getFoodSignal( self.pos[0], self.pos[1] )
 
+# -----------------------------------------------
+# MIRO sensors
+# -----------------------------------------------
+
+class MiroSensor( Sensor ):
+	def __init__( self, ego_angle, environment, color ):
+		super(MiroSensor, self).__init__(ego_angle, environment)
+		self.color = color
+
+	def getReading( self ):
+		hemi = 'left' if self.ego_angle < 0 else 'right'
+		self.environment.getSignal( hemi, color )
