@@ -5,15 +5,18 @@ import miro2 as miro
 import os
 
 from std_msgs.msg import Float32MultiArray, UInt32MultiArray
-from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import CompressedImage, JointState
 from geometry_msgs.msg import TwistStamped
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 
+import math
 import numpy as np
 import matplotlib.pyplot as plt 
 import time
 import threading
+
+from hyp_controller import *
 
 
 # Utility enums
@@ -32,6 +35,7 @@ class MiroController:
         self.pub_cmd_vel = rospy.Publisher(topic_root + "/control/cmd_vel", TwistStamped, queue_size=0)
         self.pub_cos = rospy.Publisher(topic_root + "/control/cosmetic_joints", Float32MultiArray, queue_size=0)
         self.pub_illum = rospy.Publisher(topic_root + "/control/illum", UInt32MultiArray, queue_size=0)
+        self.pub_kin = rospy.Publisher(topic_root + "/control/kinematic_joints", JointState, queue_size=0)
 
         # Subscribers
         #rospy.Subscriber(topic_root + '/sensors/package', miro.msg.sensors_package, self.touchListener)
@@ -44,27 +48,68 @@ class MiroController:
         self.velocity = TwistStamped()
         self.cos_joints = Float32MultiArray()
         self.cos_joints.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.kin_joints = JointState()
+        self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
+        self.kin_joints.position = [0.0, math.radians(34.0), 0.0, 0.0]
+        self.illum = UInt32MultiArray()
+        self.illum.data = [0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF]
         
         self.image = [None, None]
         self.image_converter = CvBridge()
-        self.m = 240
-        self.n = 320
-        self.percept = [np.zeros((self.m, self.n)), np.zeros((self.m, self.n))]
+        self.controller = HypothalamusController( self )
         self.running = True
+        self.wag_t = 0.0
+ 
+    def move( self, forces ):
+        msg_cmd_vel = TwistStamped()
 
+        # print forces
+        # desired wheel speed (m/sec)
+        wheel_speed = [forces[0], forces[1]]
+        v = 1.0
+        (dr, dtheta) = miro.utils.wheel_speed2cmd_vel(wheel_speed)
+        msg_cmd_vel.twist.linear.x = dr
+        msg_cmd_vel.twist.angular.z = dtheta
 
-    def process(self, im, camera = LEFT):
-        if im is None:
-            return
+        # publish message to topic
+        self.pub_cmd_vel.publish(msg_cmd_vel)
+    
+    def moveHead( self, y ):
+        # self.kin_joints.position[lift] = math.radians(self.LiftControl.get_value())
+		# self.kin_joints.position[pitch] = math.radians(self.PitchControl.get_value())
+        self.kin_joints.position[lift] = math.radians(y)
+        self.pub_kin.publish( self.kin_joints )
 
-        frame = cv2.resize(im, (self.n, self.m))
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        blur = cv2.GaussianBlur(gray,(21,21), 0)
-        ret, thres = cv2.threshold( gray, 0, 255, cv2.THRESH_OTSU )
+    def shine( self, color, idxs = range(6), off = False ):
+		
+        for i in idxs:
+            # if off:
+            #     self.illum.data[i] = 0x00000000			
+            # else:
+            self.illum.data[i] = color			
+
+        self.pub_illum.publish(self.illum)
         
-        
-        self.percept[camera] = blur if np.random.rand() > 0.97  else self.percept[camera] - blur
-        
+
+    def tailWag( self ):
+        MAX_TIME = 10
+        t = self.wag_t
+        A = 1.0
+        w = 2*np.pi*0.2
+        f = lambda t: A*np.cos(w*t)
+
+        if t > MAX_TIME:
+            self.cos_joints.data[wag] = 0.5
+            r = False
+            self.wag_t = 0
+        else:
+            self.cos_joints.data[wag] = f(t)
+            r = True
+
+        self.cos_joints.data[droop] = 0.0
+        self.pub_cos.publish(self.cos_joints)
+        self.wag_t += 0.2
+
 
     def callback_cam(self, ros_image, camera = LEFT):
 
@@ -85,30 +130,19 @@ class MiroController:
     def callback_camr(self, ros_image):
         self.callback_cam( ros_image, RIGHT )
 
-    def evolve_perception( self ):
-        while True:
-            self.wp.evolve( self.media )
-            time.sleep( 0.0001 )
-
     # Main loop
     def run( self ):
-        
-        fig, ax = plt.subplots(1, 2)
-        while not rospy.core.is_shutdown() and self.running:
-            for i in range(2):
-                if self.image[i] is not None:                
-                    self.process(self.image[i], i)
-                    self.image[i] = None
-            
-            stereo = cv2.StereoBM_create(numDisparities=16, blockSize=15)
-            try:
-                disparity = stereo.compute(self.percept[0], self.percept[1])
-            except:
-                disparity = self.percept[0]
+        h = 0.01
+        t = 0.0
 
-            ax[0].imshow( self.percept[0] )
-            ax[1].imshow( disparity )
+        while not rospy.core.is_shutdown() and self.running:
+            if self.image[0] is not None and self.image[1] is not None:                
+                self.controller.step(self.image, h, t)                
+                self.image = [None, None]           
+
+            self.controller.plots()
             plt.pause(0.01)
+            t += h
             
         
 
