@@ -5,7 +5,7 @@ from sensors import *
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import entropy_percept as ep
+# import entropy_percept as ep
 
 class VisualPerception:
 
@@ -24,9 +24,23 @@ class VisualPerception:
         if image is None:
             return None
 
-        image[0] = cv2.equalizeHist(image[0])
-        image[1] = cv2.equalizeHist(image[1])
-        image[2] = cv2.equalizeHist(image[2])
+        m,n,_ = image.shape
+        li = np.amax( [int(x)-r, 0] )
+        ri = np.amin( [int(x)+r, n-1] )
+        lj = np.amax( [int(y)-r, 0] )
+        rj = np.amin( [int(y)+r, m-1] )
+        # print "x: ", x, ", y: ", y, ", r: ", r
+        # print "lj: ", lj
+        # print "li: ", li
+        image_s = image[lj:rj, li:ri, :]
+        # print "Original shape: ", image.shape, ", sub shape: ", image_s.shape
+
+        # cv2.imshow("Piece", image_s)
+        # plt.hist(image_s[:,:,1].ravel(),256,[0,256])
+        # cv2.waitKey(1)
+        # image[0] = cv2.equalizeHist(image[0])
+        # image[1] = cv2.equalizeHist(image[1])
+        # image[2] = cv2.equalizeHist(image[2])
         boundaries = [
         ([17, 100, 15], [50, 230, 56]),
         ([86, 31, 4], [220, 88, 50])
@@ -39,8 +53,8 @@ class VisualPerception:
         upper = np.array(upper, dtype = "uint8")
         # find the colors within the specified boundaries and apply
         # the mask
-        mask = cv2.inRange(image, lower, upper)
-        output_g = cv2.bitwise_and(image, image, mask = mask)
+        mask = cv2.inRange(image_s, lower, upper)
+        output_g = cv2.bitwise_and(image_s, image_s, mask = mask)
 
         lower, upper = boundaries[1]
         # create NumPy arrays from the boundaries
@@ -48,15 +62,18 @@ class VisualPerception:
         upper = np.array(upper, dtype = "uint8")
         # find the colors within the specified boundaries and apply
         # the mask
-        mask = cv2.inRange(image, lower, upper)
-        output_r = cv2.bitwise_and(image, image, mask = mask)
+        mask = cv2.inRange(image_s, lower, upper)
+        output_r = cv2.bitwise_and(image_s, image_s, mask = mask)
 
-        mg = np.mean( output_g )
-        mr = np.mean( output_r )
+        mg = np.mean( image_s[:,:,1] )
+        mr = np.mean( image_s[:,:,0] )
+        mb = np.mean( image_s[:,:,2] )
 
+        
         if mr > mg:
             return 'red'
         else:
+            # print "mr: ", mr, ", mg: ", mg, ", mb: ", mb
             return 'green'
 
     def _locateCircle( self, img ):
@@ -137,7 +154,6 @@ class VisualPerception:
         else:
             stim_x = 0
 
-        print "y_pos: ", y_pos, ", thr: ", 2*n/3.0
         if y_pos < n/3.0:
             stim_y = -1
         elif y_pos > 2*n/3.0:
@@ -151,9 +167,22 @@ class ActionSystem:
     def __init__( self, robot ):
         self.robot = robot
         self.angle = 34
+        self.forces = [0, 0]
+        self.s = 30
         
-    def wag( self ):
-        self.robot.tailWag()
+    def wag( self, xi ):
+        if xi > 0.5:
+            self.robot.tailWag()
+
+    # def addForces( self, forces ):
+    #     self.forces[0] += forces[0]
+    #     self.forces[1] += forces[1]
+        
+    #     self.forces[0] = 0.5 if self.forces[0] > .5 else self.forces[0]
+    #     self.forces[1] = 0.5 if self.forces[1] > .5 else self.forces[1]
+
+    #     self.forces[0] = -0.1 if self.forces[0] < -0.1 else self.forces[0]
+    #     self.forces[1] = -.1 if self.forces[1] < -0.1 else self.forces[1]
 
     def follow( self, location, xi ):
         forces = [0.0, 0.0]
@@ -161,23 +190,19 @@ class ActionSystem:
         if location is None:
             return 
 
-        if xi < 0.5:
-            return 
-
         if location == -1:
-            forces[1] = 1.0*xi
+            forces[1] = 1.0*xi*self.s
         elif location == 1:
-            forces[0] = 1.0*xi
+            forces[0] = 1.0*xi*self.s
         elif location == 0:
             forces = [xi, xi]
 
+        # self.addForces( forces )
         self.robot.move( forces )  
 
     def track( self, location_y, xi ):
         if location_y is None:
             return
-
-        print "loc_y: ", location_y
         
         if location_y == 1 and self.angle == 34:
             self.angle = 60
@@ -190,12 +215,23 @@ class ActionSystem:
 
         self.robot.moveHead( self.angle )
 
-    def search( self, dir ):
-        v = dir*0.1
-        forces = [0, v]
+    def search( self, attention, xi ):
+        v = xi*0.1*self.s
+
+        # if xi < 0.8:
+        #     return
+
+        if attention.x == -1:
+            forces = [0, v]
+        elif attention.x == 1:
+            forces = [v, 0]
+        else:
+            forces = [v, v]
+        
+        # self.addForces( forces )
         self.robot.move( forces )
 
-    def backtrack( self ):
+    def backtrack( self, xi ):
         v = -0.2
         forces = [v, v]
         self.robot.move( forces )
@@ -214,13 +250,15 @@ class ActionSystem:
         self.robot.shine( c, idxs )
         
 
-    def stop( self ):
-        self.robot.move([0,0])
+    def stop( self, xi ):        
+        self.robot.stop()
+
 
 class MotivationalSystem(object):
     def __init__(self, actions, perception):
         self.actions = actions
         self.perception = perception
+        self.attention = AttentionSystem()
         self.object_size = 0
         self.s = 0
         self.elapsed = 0
@@ -242,9 +280,12 @@ class MotivationalSystem(object):
         r = self.perception.isClose( images, self.object_size )
 
         if r == 1 and self.s == 1 and xi > 0.5:
-            self.actions.stop() 
+            self.actions.stop( xi ) 
             self.s = 2
             self.object_size = 0
+
+        if xi < 0.1:
+            self.s = 0
 
         return r
 
@@ -253,6 +294,7 @@ class RedMotivationalSystem(MotivationalSystem):
         super(RedMotivationalSystem, self).__init__(actions, perception)
         self.stim_x = None
         self.stim_y = None
+        self.elapsed = 0
 
     def perceive(self, images, xi):
         if images is None:
@@ -260,35 +302,54 @@ class RedMotivationalSystem(MotivationalSystem):
             self.stim_y = None
             return 
 
+        self.attention.update( images, "red" )
         self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(images, 'red')
         
     def express( self, xi ):
         self.actions.shine( 'red', xi )
 
         if self.s == 2:
-            self.actions.wag()
+            self.actions.wag( xi )
 
     def behave( self, xi ):
-        if self.stim_x is None and self.s != 0:
-            self.elapsed += 1
+        # if self.stim_x is None and self.s != 0:
+        #     self.elapsed += 1
 
-            print self.elapsed
+        #     print self.elapsed
             
-            if self.elapsed > 200:
-                self.s = 0
-                self.elapsed = 0
-        elif  self.stim_x is not None and self.s == 0:
+        #     if self.elapsed > 200:
+        #         self.s = 0
+        #         self.elapsed = 0
+        # elif  self.stim_x is not None and self.s == 0:
+        #     self.s = 1
+        #     self.elapsed = 0
+        #     self.actions.stop()
+
+        # if self.s == 0:
+        #     if xi > 0.5:
+        #         self.actions.search(1)
+        # elif self.s == 1:
+        if self.stim_x is not None and self.s == 0:
             self.s = 1
             self.elapsed = 0
-            self.actions.stop()
+            # self.actions.stop( xi )
+        elif self.stim_x is None and self.s in [1,2]:
+            if self.elapsed > 50:
+                self.s = 0
+        else:
+            # self.actions.stop( xi )
+            self.elapsed += 1
 
+        if self.s == 1:            
+            # self.actions.track( self.stim_y, xi )
+            self.actions.follow( self.stim_x, xi )           
+            print "Following red"
         if self.s == 0:
-            if xi > 0.5:
-                self.actions.search(1)
-        elif self.s == 1:
-            self.actions.track( self.stim_y, xi )
-            self.actions.follow( self.stim_x, xi )
-            self.s = 1
+            self.actions.search( self.attention, xi )
+            print "Searching for red"
+            # self.s = 1
+
+        print "State red: ", self.s
 
 class GreenMotivationalSystem(MotivationalSystem):
     def __init__(self, actions, perception):
@@ -303,35 +364,53 @@ class GreenMotivationalSystem(MotivationalSystem):
             self.stim_y = None
             return 
 
+        self.attention.update( images, "green" )
         self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(images, 'green')
 
     def express( self, xi ):
         self.actions.shine( 'green', xi )
 
-        if self.s == 2:
-            self.actions.wag()
+        # if self.s == 2:
+        self.actions.wag( xi )
 
     def behave( self, xi ):
-        if self.stim_x is None and self.s != 0:
-            self.elapsed += 1
+        # if self.stim_x is None and self.s != 0:
+        #     self.elapsed += 1
             
-            if self.elapsed > 200:
-                self.s = 0
-                self.elapsed = 0
+        #     if self.elapsed > 200:
+        #         self.s = 0
+        #         self.elapsed = 0
 
-        elif  self.stim_x is not None and self.s == 0:
-            self.s = 1
-            self.elapsed = 0
-            self.actions.stop()
+        # elif  self.stim_x is not None and self.s == 0:
+        #     self.s = 1
+        #     self.elapsed = 0
+        #     self.actions.stop()
 
-        if self.s == 0:
-            if xi > 0.5:
-                self.actions.search(-1)
-        elif self.s == 1:
-            self.actions.track( self.stim_y, xi )
-            self.actions.follow( self.stim_x, xi )
-            self.s = 1
-        
+        # if self.s == 0:
+        #     if xi > 0.5:
+        #         self.actions.search(-1)
+        # elif self.s == 1:
+        # if self.stim_x is not None and self.s == 0:
+        #     self.s = 1
+        #     self.elapsed = 0
+        #     # self.actions.stop( xi )
+        # elif self.stim_x is None and self.s in [1,2]:
+        #     if self.elapsed > 50:
+        #         self.s = 0
+        # else:
+        #     # self.actions.stop( xi )
+        #     self.elapsed += 1
+
+        # if self.s == 1:            
+        #     # self.actions.track( self.stim_y, xi )
+        #     self.actions.follow( self.stim_x, xi )           
+        #     print "Following green"
+        # if self.s == 0:
+        self.actions.search( self.attention, xi )
+        #     print "Searching for green"
+        pass
+        # print "State green: ", self.s, ", Elapsed: ", self.elapsed
+
 
 class HypothalamusController:
     def __init__( self, robot ):
@@ -349,7 +428,7 @@ class HypothalamusController:
         self.diff_heat = 0.2
         self.images = None
 
-        self.fig, self.ax = plt.subplots(1,2)
+        # self.fig, self.ax = plt.subplots(1,2)
 
         self.initMaps()
 
@@ -378,8 +457,7 @@ class HypothalamusController:
         alpha = 0.5
         beta = 0.5
         G = 0.5
-
-        print "reward r: ", reward_r, ", Reward g: ", reward_g
+        # print "reward r: ", reward_r, ", Reward g: ", reward_g
         
         dE1 = -alpha*G + (reward_g*50 if E1 < 1 else 0.0)
         dE2 = -beta*G + (reward_r*50 if E2 < 1 else 0.0)
@@ -440,15 +518,15 @@ class HypothalamusController:
         if self.state is not None and len(di) > 0:
             self.state = self.state + h*di
 
-            print "state: " ,self.state
+            # print "state: " ,self.state
 
             for i in range(len(self.state)):
                 if self.state[i] <= 0:
                     self.state[i] = 0.0
         
         # Iterate motivational systems
-        self.reward_r = self.mot_red.iterate( im, xi_r )
-        self.reward_g = self.mot_green.iterate( im, xi_g )
+        # self.reward_r = self.mot_red.iterate( im, xi_r )
+        self.reward_g = self.mot_green.iterate( im, 1.0 )
 
     def plots( self ):
         images = self.images
@@ -456,9 +534,12 @@ class HypothalamusController:
         if images is None:
             return
 
-        # img = images[0]
-        # im = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY) 
-        #  # Set up the detector with default parameters.
+        img = images[0]
+        # image[0] = cv2.equalizeHist(image[0])
+        # image[1] = cv2.equalizeHist(image[1])
+        # image[2] = cv2.equalizeHist(image[2])
+        # im = 255 - cv2.cvtColor(img, cv2.COLOR_RGB2GRAY) 
+        # #  # Set up the detector with default parameters.
         # detector = cv2.SimpleBlobDetector_create()
 
         # # Detect blobs.
@@ -472,7 +553,46 @@ class HypothalamusController:
         # # Show keypoints
         # cv2.imshow("Keypoints", im_with_keypoints)
         # cv2.waitKey(1)
-        # imr =  ep.getEntropy(imr)
-        # self.ax[0].imshow( images[0])
-        # self.ax[1].imshow( images[1] )
+        # # imr =  ep.getEntropy(imr)
+        # # self.ax[0].imshow( image)
+        # # self.ax[1].imshow( images[1] )
+        # params = cv2.SimpleBlobDetector_Params()
+
+        # # Change thresholds
+        # params.minThreshold = 10
+        # params.maxThreshold = 200
+
+
+        # # Filter by Area.
+        # params.filterByArea = True
+        # params.minArea = 1500
+
+        # # Filter by Circularity
+        # params.filterByCircularity = True
+        # params.minCircularity = 0.1
+
+        # # Filter by Convexity
+        # params.filterByConvexity = True
+        # params.minConvexity = 0.87
+
+        # # Filter by Inertia
+        # params.filterByInertia = True
+        # params.minInertiaRatio = 0.01
+
+        # # Create a detector with the parameters
+        # detector = cv2.SimpleBlobDetector_create(params)
+
+
+        # # Detect blobs.
+        # keypoints = detector.detect(im)
+
+        # # Draw detected blobs as red circles.
+        # # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
+        # # the size of the circle corresponds to the size of blob
+
+        # im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+        # # Show blobs
+        # cv2.imshow("Keypoints", im_with_keypoints)
+        # cv2.waitKey(1)
         
