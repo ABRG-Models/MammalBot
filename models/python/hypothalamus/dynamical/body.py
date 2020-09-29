@@ -31,7 +31,7 @@ class Body:
 
 	def step( self, h, drive_wheels ):
 	# drive_wheels expected to be a two dimensional vector v \in [0,1]x[0,1]
-
+		print drive_wheels
 		d = self.radius
 		Ic = self.m*self.kappa**2.0
 		F1 = self.gamma*drive_wheels[0,0]

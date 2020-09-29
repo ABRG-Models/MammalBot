@@ -38,11 +38,18 @@ class ChemicalSensor( Sensor ):
 # MIRO sensors
 # -----------------------------------------------
 
-class MiroSensor( Sensor ):
-	def __init__( self, ego_angle, environment, color ):
-		super(MiroSensor, self).__init__(ego_angle, environment)
-		self.color = color
+class MiroTemperatureSensor( Sensor ):
+	def __init__( self, ego_angle, environment):
+		super(MiroTemperatureSensor, self).__init__(ego_angle, environment)
 
 	def getReading( self ):
 		hemi = 'left' if self.ego_angle < 0 else 'right'
-		self.environment.getSignal( hemi, color )
+		return self.environment.getTemperature( hemi )
+
+class MiroChemicalSensor( Sensor ):
+	def __init__( self, ego_angle, environment ):
+		super(MiroChemicalSensor, self).__init__(ego_angle, environment)
+
+	def getReading( self ):
+		hemi = 'left' if self.ego_angle < 0 else 'right'
+		return self.environment.getFoodSignal( hemi )

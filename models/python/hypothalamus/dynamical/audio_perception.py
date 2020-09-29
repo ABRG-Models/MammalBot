@@ -10,8 +10,8 @@ class AudioPerception:
 	def __init__(self):
 		# Audio frequency parameters
 		self.frequencies = [440, 600]       # Frequencies to detect (multiples of 40 recommended)
-		self.buffer_length = 20             # At 40Hz a buffer of 20 == 0.5s
-		self.f_thresh = 0.2                  # Minimum power at which to register frequency detection
+		self.buffer_length = 10             # At 40Hz a buffer of 20 == 0.5s
+		self.f_thresh = 0.5                  # Minimum power at which to register frequency detection
 
 		# FFT array positions of defined frequencies
 		self.f_pos = [int(frq / BLOCK_RATE) for frq in self.frequencies]
