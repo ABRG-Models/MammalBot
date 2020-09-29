@@ -7,7 +7,7 @@ import numpy as np
 # import matplotlib.pyplot as plt
 import entropy_percept as ep
 
-from dynamical.audio_perception import AudioPerception
+from audio_perception import AudioPerception
 
 class VisualPerception:
 
@@ -166,12 +166,14 @@ class ActionSystem:
 		if xi < 0.5:
 			return
 
+		v = 0.1
+
 		if location == -1:
-			forces[1] = 1.0*xi
+			forces[1] = v*xi
 		elif location == 1:
-			forces[0] = 1.0*xi
+			forces[0] = v*xi
 		elif location == 0:
-			forces = [xi, xi]
+			forces = [v*xi, v*xi]
 
 		self.robot.move( forces )
 
@@ -346,13 +348,13 @@ class AudioMotivationalSystem(MotivationalSystem):
 			self.stim_x = None
 			# self.stim_y = None
 			return
-
+		thres = 1.0
 		# TODO: Make this tidier, take multiple freqs
 		self.stim_x = self.perception.locate_frequencies(audio)[0]
-		if self.stim_x > 0:
-			self.stim_x = 1
-		elif self.stim_x < 0:
+		if self.stim_x > thres:
 			self.stim_x = -1
+		elif self.stim_x < -thres:
+			self.stim_x = 1
 		else:
 			self.stim_x = 0
 
@@ -360,7 +362,7 @@ class AudioMotivationalSystem(MotivationalSystem):
 		# self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(images, 'red')
 
 	def express(self, xi):
-		self.actions.shine('red', xi)
+		self.actions.shine('green', xi)
 
 		# if self.s == 2:
 		# 	self.actions.wag()
@@ -375,7 +377,10 @@ class AudioMotivationalSystem(MotivationalSystem):
 		self.behave( xi )
 
 		r = self.perception.isClose(audio)
-		#
+		
+		# if r == 1:
+		# 	self.actions.stop()
+
 		# if r == 1 and self.s == 1 and xi > 0.5:
 		# 	self.actions.stop()
 		# 	self.s = 2
@@ -386,7 +391,7 @@ class AudioMotivationalSystem(MotivationalSystem):
 
 class HypothalamusController:
 	def __init__( self, robot ):
-		self.s0 = np.array([0.5, 1.0, 0.0]);
+		self.s0 = np.array([0.5, 1.0, 0.0])
 		self.state = self.s0
 		self.robot = robot
 		self.perception = VisualPerception()
@@ -507,9 +512,9 @@ class HypothalamusController:
 
 		# Iterate motivational systems
 		self.reward_r = self.mot_red.iterate( im, xi_r )
-		self.reward_g = self.mot_green.iterate( im, xi_g )
+		#self.reward_g = self.mot_green.iterate( im, xi_g )
 
-		# self.reward_g = self.mot_audio.iterate(au, xi_g)
+		self.reward_g = self.mot_audio.iterate(au, xi_g)
 
 	def plots( self ):
 		images = self.images
