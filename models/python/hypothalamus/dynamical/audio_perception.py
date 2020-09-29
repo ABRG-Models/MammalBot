@@ -18,11 +18,15 @@ class AudioPerception:
 		self.f_buffer = np.zeros((len(self.frequencies), self.buffer_length, MICS))
 		self.f_mean = np.zeros((len(self.frequencies), MICS))
 
-	def locate_frequencies(self, data):
+	@staticmethod
+	def shape_data(data):
 		# Reshape data (from node_detect_audio_engine.py)
 		data = np.asarray(data, 'float32') * (1.0 / 32768.0)
 		data = data.reshape((MICS, SAMP_PER_BLOCK))
 
+		return data
+
+	def do_fft(self, data):
 		# Perform Fast Fourier Transform on audio sample from each microphone, dropping mirrored and imaginary portions
 		fft_data = [np.abs(np.fft.fft(mic))[: SAMP_PER_BLOCK / 2] for mic in data]
 
@@ -32,6 +36,26 @@ class AudioPerception:
 			[fft_data[mic][self.f_pos[frq]] for mic, _ in enumerate(fft_data)]
 			for frq, _ in enumerate(self.frequencies)
 		])
+
+		return freq_power
+
+	def locate_frequencies(self, data):
+		# # Reshape data (from node_detect_audio_engine.py)
+		# data = np.asarray(data, 'float32') * (1.0 / 32768.0)
+		# data = data.reshape((MICS, SAMP_PER_BLOCK))
+		data = self.shape_data(data)
+
+		# # Perform Fast Fourier Transform on audio sample from each microphone, dropping mirrored and imaginary portions
+		# fft_data = [np.abs(np.fft.fft(mic))[: SAMP_PER_BLOCK / 2] for mic in data]
+		#
+		# # Get power of specified frequencies from each microphone
+		# # Mic data is ordered [LEFT, RIGHT, CENTRE, TAIL]
+		# freq_power = np.array([
+		# 	[fft_data[mic][self.f_pos[frq]] for mic, _ in enumerate(fft_data)]
+		# 	for frq, _ in enumerate(self.frequencies)
+		# ])
+
+		freq_power = self.do_fft(data)
 
 		# Add frequency power from this sample to the buffer and store the mean power to smooth out noise
 		for frq, mic in enumerate(freq_power):
@@ -55,3 +79,20 @@ class AudioPerception:
 		# TODO: Get front/back bias from centre/tail mics (needs further calibration due to differing sensitivities)
 
 		return f_left
+
+	def isClose(self, data):
+		data = self.shape_data(data)
+
+		freq_power = self.do_fft(data)
+
+		# PICKED RANDOM NUMBER FOR POWER LEVEL
+		# TODO: Update to play nice with more frequencies
+		print('freq power: ' + str(freq_power[0][3]))
+		if freq_power[0][3] > 5:
+			return 1
+		else:
+			return 0
+
+
+
+
