@@ -41,10 +41,10 @@ class Brain (object):
 
 	def step(self, h, t, reward ):
 
-		assert self.body is not None, 'No body model'  
+		# assert self.body is not None, 'No body model'  
 
 		wheel_force, di = self.dmap( t, h, reward )
-		
+
 		if self.state is not None and len(di) > 0:
 			self.state = self.state + h*di
 
@@ -53,7 +53,11 @@ class Brain (object):
 					self.state[i] = 0.0
 					# print "Stage gone negative!"
 
+		if self.body is None:
+			return wheel_force
+
 		self.body.step( h, wheel_force )
+		return None
 
 	def reset( self ):
 		self.state = self.s0
@@ -140,8 +144,8 @@ class MotivationalBrain( Brain ):
 		self.variables['dFood'] = self.D_food( E - self.preferred['E'] )
 		self.variables['dTemp'] = self.D_temp( Tb - self.preferred['Tb'] )
 
-		# print "Drive temp: ", dTemp, "- diff: ", (Tb - self.Tp)
-		# print "Drive E", dFood
+		print "Drive temp: ", self.variables['dTemp'], "- diff: ", (Tb - self.Tp)
+		print "Drive E", self.variables['dFood'] 
 		
 		return dTb, dE
 
@@ -191,7 +195,7 @@ class MotivationalBrain( Brain ):
 		A = np.matrix([[1.0, 0.0],[0.0, 1.0]])
 		B = np.matrix([[0.0, 1.0],[1.0, 0.0]])
 		sensors_temp = np.array([Tl, Tr])/40.0
-		# print sensors_temp
+		
 		sensors_food = np.array([Fl, Fr])
 
 		Ta = (Tl + Tr)/2.0
@@ -202,10 +206,10 @@ class MotivationalBrain( Brain ):
 		F_app = np.heaviside( self.variables['dFood'], 0.5 )*np.abs(self.variables['dFood'])
 		F_avoid = np.heaviside( -self.variables['dFood'], 0.5 )*np.abs(self.variables['dFood'])
 
-		# print "T_app: ", T_app, ", T_avoid: ", T_avoid
-		# print "F_app: ", F_app, ", F_avoid: ", F_avoid
-		# print "mu_food: ", mu_food
-		# print "mu_temp: ", mu_temp
+		print "T_app: ", T_app, ", T_avoid: ", T_avoid
+		print "F_app: ", F_app, ", F_avoid: ", F_avoid
+		print "mu_food: ", mu_food
+		print "mu_temp: ", mu_temp
 		F_temp = T_app*B + T_avoid*A
 		F_food = F_app*B + F_avoid*A
 		M_temp = mu_temp*F_temp
@@ -215,7 +219,7 @@ class MotivationalBrain( Brain ):
 					  np.dot(M_food, sensors_food) + \
 					  (np.random.random(2)-0.5)*0.00
 
-		# print "Wheel drive: ", wheel_drive
+		print "Wheel drive: ", wheel_drive
 
 		return wheel_drive
 
