@@ -4,8 +4,9 @@ import brainsv2 as brains
 from sensors import *
 import cv2
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import entropy_percept as ep
+from plots_util import *
 
 from audio_perception import AudioPerception
 
@@ -139,7 +140,7 @@ class VisualPerception:
 		else:
 			stim_x = 0
 
-		print "y_pos: ", y_pos, ", thr: ", 2*n/3.0
+		# print "y_pos: ", y_pos, ", thr: ", 2*n/3.0
 		if y_pos < n/3.0:
 			stim_y = -1
 		elif y_pos > 2*n/3.0:
@@ -153,6 +154,7 @@ class ActionSystem:
 	def __init__( self, robot ):
 		self.robot = robot
 		self.angle = 34
+		self.forces = [0.0, 0.0]
 
 	def wag( self ):
 		self.robot.tailWag()
@@ -163,10 +165,10 @@ class ActionSystem:
 		if location is None:
 			return
 
-		if xi < 0.5:
-			return
+		# if xi < 0.5:
+		# 	return
 
-		v = 0.1
+		v = 0.2
 
 		if location == -1:
 			forces[1] = v*xi
@@ -176,6 +178,7 @@ class ActionSystem:
 			forces = [v*xi, v*xi]
 
 		self.robot.move( forces )
+		self.forces = forces
 
 	def track( self, location_y, xi ):
 		if location_y is None:
@@ -196,8 +199,8 @@ class ActionSystem:
 
 	def search( self, dir ):
 		v = dir*0.1
-		forces = [0, v]
-		self.robot.move( forces )
+		self.forces = [0, v]
+		self.robot.move( self.forces )
 
 	def backtrack( self ):
 		v = -0.2
@@ -245,7 +248,7 @@ class MotivationalSystem(object):
 
 		r = self.perception.isClose( images, self.object_size )
 
-		if r == 1 and self.s == 1 and xi > 0.5:
+		if r == 1 and xi > 0.5:
 			self.actions.stop()
 			self.s = 2
 			self.object_size = 0
@@ -276,11 +279,10 @@ class RedMotivationalSystem(MotivationalSystem):
 		if self.stim_x is None and self.s != 0:
 			self.elapsed += 1
 
-			print self.elapsed
-
-			if self.elapsed > 200:
+			if self.elapsed > 20:
 				self.s = 0
 				self.elapsed = 0
+
 		elif  self.stim_x is not None and self.s == 0:
 			self.s = 1
 			self.elapsed = 0
@@ -288,11 +290,11 @@ class RedMotivationalSystem(MotivationalSystem):
 
 		if self.s == 0:
 			if xi > 0.5:
-				self.actions.search(1)
+				self.actions.search(-1)
 		elif self.s == 1:
-			self.actions.track( self.stim_y, xi )
 			self.actions.follow( self.stim_x, xi )
 			self.s = 1
+
 
 class GreenMotivationalSystem(MotivationalSystem):
 	def __init__(self, actions, perception):
@@ -330,9 +332,8 @@ class GreenMotivationalSystem(MotivationalSystem):
 
 		if self.s == 0:
 			if xi > 0.5:
-				self.actions.search(-1)
+				self.actions.search(1)
 		elif self.s == 1:
-			self.actions.track( self.stim_y, xi )
 			self.actions.follow( self.stim_x, xi )
 			self.s = 1
 
@@ -348,9 +349,11 @@ class AudioMotivationalSystem(MotivationalSystem):
 			self.stim_x = None
 			# self.stim_y = None
 			return
-		thres = 1.0
+
+		thres = 0.5
 		# TODO: Make this tidier, take multiple freqs
 		self.stim_x = self.perception.locate_frequencies(audio)[0]
+
 		if self.stim_x > thres:
 			self.stim_x = -1
 		elif self.stim_x < -thres:
@@ -364,27 +367,32 @@ class AudioMotivationalSystem(MotivationalSystem):
 	def express(self, xi):
 		self.actions.shine('green', xi)
 
-		# if self.s == 2:
-		# 	self.actions.wag()
+		if self.s == 2:
+			self.actions.wag()
 
 	def behave(self, xi):
-		self.actions.follow(self.stim_x, xi)
-		print("reward:" + str(xi))
+		if self.s == 1:
+			if self.stim_x != 0:
+				self.actions.follow(self.stim_x, xi)
+			print("reward:" + str(xi))
 
 	def iterate( self, audio, xi ):
 		self.perceive( audio, xi )
 		self.express( xi )
 		self.behave( xi )
 
-		r = self.perception.isClose(audio)
+		rs = self.perception.isClose(audio)
 		
+		r = rs[0]
 		# if r == 1:
 		# 	self.actions.stop()
 
-		# if r == 1 and self.s == 1 and xi > 0.5:
-		# 	self.actions.stop()
-		# 	self.s = 2
-		# 	self.object_size = 0
+		if r == 1  and xi > 0.5:
+			self.actions.stop()
+			self.s = 2
+			self.object_size = 0
+		else:
+			self.s = 1
 
 		return r
 
@@ -408,11 +416,13 @@ class HypothalamusController:
 		self.variables = {'DGreen': 0.0, 'DRed': 0.0, 'mu_green': 0.0, 'mu_red': 0.0}
 		self.reward_r = 0
 		self.reward_g = 0
-		self.diff_heat = 0.2
+		self.diff_heat = 0.01
 		self.images = None
 		self.audio = 0
 
-		# self.fig, self.ax = plt.subplots(1,2)
+		self.data = {'E1':[], 'E2': [], 'rho': [], 'xi_r': [], 'xi_g': [], 
+					 'reward_g': [], 'reward_r': [], 'vel_l': [], 'vel_r':[],
+					 'a':[], 'b':[]}
 
 		self.initMaps()
 
@@ -438,14 +448,14 @@ class HypothalamusController:
 	def drive_map( self, E1, E2, reward_g, reward_r ):
 		
 		# Computing physiological state
-		alpha = 0.5
-		beta = 0.5
+		alpha = 0.3
+		beta = 0.3
 		G = 0.5
 
-		print "reward r: ", reward_r, ", Reward g: ", reward_g
+		# print "reward r: ", reward_r, ", Reward g: ", reward_g
 
-		dE1 = -alpha*G + (reward_g*50 if E1 < 1 else 0.0)
-		dE2 = -beta*G + (reward_r*50 if E2 < 1 else 0.0)
+		dE1 = -alpha*G + (reward_g*40 if E1 < 1 else 0.0)
+		dE2 = -beta*G + (reward_r*40 if E2 < 1 else 0.0)
 
 		# print "dE1: ", dE1, ", dE2: ", dE2
 		# Setting up the drives
@@ -460,10 +470,11 @@ class HypothalamusController:
 		# Competition parameters
 		a = np.abs(self.variables['dGreen'])
 		b = np.abs(self.variables['dRed'])
+		self.data['a'].append(a)
+		self.data['b'].append(b)
 
-
-		U = lambda rho: (1.0/4.0)*rho**2*(1 - rho)**2 + a*rho**2 + b*(1 - rho)**2
-		dU = lambda rho: (1.0/2.0)*(rho*((1-rho)**2 + a) - (1-rho)*(rho**2 + b))
+		U = lambda rho: rho**2*(1 - rho)**2 + a*rho**2 + b*(1 - rho)**2
+		dU = lambda rho: (rho*((1-rho)**2 + a) - (1-rho)*(rho**2 + b))
 
 		noise = np.random.normal(loc = 0.0, scale=self.diff_heat)/np.sqrt(h)
 		dRho = -L*dU( rho ) + noise
@@ -504,7 +515,7 @@ class HypothalamusController:
 		if self.state is not None and len(di) > 0:
 			self.state = self.state + h*di
 
-			print "state: " ,self.state
+			# print "state: " ,self.state
 
 			for i in range(len(self.state)):
 				if self.state[i] <= 0:
@@ -512,32 +523,77 @@ class HypothalamusController:
 
 		# Iterate motivational systems
 		self.reward_r = self.mot_red.iterate( im, xi_r )
-		#self.reward_g = self.mot_green.iterate( im, xi_g )
+		self.reward_g = self.mot_green.iterate( im, xi_g )
 
-		self.reward_g = self.mot_audio.iterate(au, xi_g)
+		# self.reward_g = self.mot_audio.iterate(au, xi_g)
+		self.data['E1'].append(self.state[0])
+		self.data['E2'].append(self.state[1])
+		self.data['rho'].append(self.state[2])
+		self.data['xi_r'].append(xi_r)
+		self.data['xi_g'].append(xi_g)
+		self.data['vel_l'].append( self.actions.forces[0]/0.2 )
+		self.data['vel_r'].append( self.actions.forces[1]/0.2 )
+		self.data['reward_r'].append( self.reward_r )
+		self.data['reward_g'].append( self.reward_g )
 
 	def plots( self ):
-		images = self.images
+		a = 0.9
+		s = 5.0
+		reward_r = np.array(self.data['reward_r'])
+		reward_g = np.array(self.data['reward_g'])
+		idx = np.arange(0, len(self.data['reward_r']))
 
-		if images is None:
-			return
+		self.fig, self.ax = plt.subplots(2,2)
+		# Plotting drives
+		self.ax[0,0].plot( idx[reward_r == 1], 1.5*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
+		self.ax[0,0].plot( idx[reward_g == 1], 1.5*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
+		self.ax[0,0].plot( self.data['E1'], 'g', linewidth= 2.0, label = "E1" )
+		self.ax[0,0].plot( self.data['E2'], 'r', linewidth= 2.0, label = "E2" ) 
+		
+		self.ax[0,0].set_title('Internal state')
+		self.ax[0,0].set_ylabel('Energy')
 
-		# img = images[0]
-		# im = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-		#  # Set up the detector with default parameters.
-		# detector = cv2.SimpleBlobDetector_create()
+		# Protting tendencies
+		self.ax[0,1].plot( idx[reward_r == 1], 1.2*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
+		self.ax[0,1].plot( idx[reward_g == 1], 1.2*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
+		self.ax[0,1].plot( self.data['xi_g'], 'g', linewidth= 2.0, label = "xi_g" )
+		self.ax[0,1].plot( self.data['xi_r'], 'r', linewidth= 2.0, label = "xi_r" )
+		
+		self.ax[0,1].set_title('Tendencies')
+		self.ax[0,1].set_ylabel('xi')
 
-		# # Detect blobs.
-		# keypoints = detector.detect(im)
-		# print keypoints
+		# Plotting phi
+		self.ax[1,0].plot( idx[reward_r == 1], 1.2*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
+		self.ax[1,0].plot( idx[reward_g == 1], 1.2*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
+		self.ax[1,0].plot( self.data['rho'], 'k',  linewidth= 2.0 )		
+		self.ax[1,0].set_title('Motivational state')
+		self.ax[1,0].set_xlabel('Time step')
+		self.ax[1,0].set_ylabel('rho')
 
-		# # Draw detected blobs as red circles.
-		# # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
-		# im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+		# Plotting speed
+		self.ax[1,1].plot( idx[reward_r == 1], 1.2*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
+		self.ax[1,1].plot( idx[reward_g == 1], 1.2*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
+		self.ax[1,1].plot( self.data['vel_l'], 'k',  linewidth= 2.0, label = "left" )
+		self.ax[1,1].plot( self.data['vel_r'], 'b',  linewidth= 2.0, label = "right" )		
+		self.ax[1,1].legend()
+		self.ax[1,1].set_title('Wheel speed')
+		self.ax[1,1].set_xlabel('Time step')
+		self.ax[1,1].set_ylabel('Speed')
 
-		# # Show keypoints
-		# cv2.imshow("Keypoints", im_with_keypoints)
-		# cv2.waitKey(1)
-		# imr =  ep.getEntropy(imr)
-		# self.ax[0].imshow( images[0])
-		# self.ax[1].imshow( images[1] )
+		# Plot in state space
+		fig, ax = plt.subplots(1,2)
+		ax[0].plot( np.heaviside(1.0-np.array(self.data['E1']), 0)*(1.0-np.array(self.data['E1'])), 
+					np.heaviside(1.0-np.array(self.data['E2']), 0)*(1.0-np.array(self.data['E2'])), 'k.-', linewidth = 1.0, markersize = 5 )
+		ax[0].grid()
+		ax[0].set_title('Trajectory of deficits')
+		ax[0].set_xlabel('Food deficit')
+		ax[0].set_xlabel('Water deficit')
+
+		plot_boundaries( fig, ax[1] )
+		ax[1].plot( self.data['a'], self.data['b'])
+		ax[1].set_title( 'Motivational bifurcation' )
+		ax[1].set_xlabel('a')
+		ax[1].set_ylabel('b')
+		# Statistics
+
+		plt.show()
