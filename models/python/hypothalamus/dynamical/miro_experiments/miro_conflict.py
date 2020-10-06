@@ -146,10 +146,14 @@ class MiroController:
 				self.controller.step(self.image, h, t, self.audio)
 				self.image = [None, None]
 
-			self.controller.plots()
-			# plt.pause(0.01)
+			
+			plt.pause(0.01)
 			t += h
+			
+			if t > 100.0:
+				self.running = False
 
+		self.controller.plots()
 
 
 if __name__ == "__main__":
