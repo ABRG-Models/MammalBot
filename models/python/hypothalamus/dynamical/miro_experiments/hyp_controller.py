@@ -168,7 +168,7 @@ class ActionSystem:
 		# if xi < 0.5:
 		# 	return
 
-		v = 0.2
+		v = 0.5
 
 		if location == -1:
 			forces[1] = v*xi
@@ -222,7 +222,7 @@ class ActionSystem:
 
 
 	def stop( self ):
-		self.robot.move([0,0])
+		self.robot.stop()
 
 class MotivationalSystem(object):
 	def __init__(self, actions, perception):
@@ -321,7 +321,7 @@ class GreenMotivationalSystem(MotivationalSystem):
 		if self.stim_x is None and self.s != 0:
 			self.elapsed += 1
 
-			if self.elapsed > 200:
+			if self.elapsed > 20:
 				self.s = 0
 				self.elapsed = 0
 
@@ -399,7 +399,7 @@ class AudioMotivationalSystem(MotivationalSystem):
 
 class HypothalamusController:
 	def __init__( self, robot ):
-		self.s0 = np.array([0.5, 1.0, 0.0])
+		self.s0 = np.array([0.1, 0.15, 0.0])
 		self.state = self.s0
 		self.robot = robot
 		self.perception = VisualPerception()
@@ -416,9 +416,11 @@ class HypothalamusController:
 		self.variables = {'DGreen': 0.0, 'DRed': 0.0, 'mu_green': 0.0, 'mu_red': 0.0}
 		self.reward_r = 0
 		self.reward_g = 0
-		self.diff_heat = 0.01
+		self.diff_heat = 0.1
 		self.images = None
 		self.audio = 0
+		self.fig, self.ax = plt.subplots(2,2)
+		self.fig2, self.ax2 = plt.subplots(1,2)
 
 		self.data = {'E1':[], 'E2': [], 'rho': [], 'xi_r': [], 'xi_g': [], 
 					 'reward_g': [], 'reward_r': [], 'vel_l': [], 'vel_r':[],
@@ -448,14 +450,15 @@ class HypothalamusController:
 	def drive_map( self, E1, E2, reward_g, reward_r ):
 		
 		# Computing physiological state
-		alpha = 0.3
-		beta = 0.3
+		alpha = 0.1
+		beta = 0.1
 		G = 0.5
+		sr = 0.5
 
 		# print "reward r: ", reward_r, ", Reward g: ", reward_g
 
-		dE1 = -alpha*G + (reward_g*40 if E1 < 1 else 0.0)
-		dE2 = -beta*G + (reward_r*40 if E2 < 1 else 0.0)
+		dE1 = -alpha*G + (reward_g*sr if E1 < 1 else 0.0)
+		dE2 = -beta*G + (reward_r*sr if E2 < 1 else 0.0)
 
 		# print "dE1: ", dE1, ", dE2: ", dE2
 		# Setting up the drives
@@ -467,9 +470,11 @@ class HypothalamusController:
 	def motivation_map( self, h, rho ):
 		L = 20.0
 
+		a_strength = 1.0
+		b_strength = 1.0
 		# Competition parameters
-		a = np.abs(self.variables['dGreen'])
-		b = np.abs(self.variables['dRed'])
+		a = np.abs(self.variables['dGreen'])*a_strength
+		b = np.abs(self.variables['dRed'])*b_strength
 		self.data['a'].append(a)
 		self.data['b'].append(b)
 
@@ -524,15 +529,14 @@ class HypothalamusController:
 		# Iterate motivational systems
 		self.reward_r = self.mot_red.iterate( im, xi_r )
 		self.reward_g = self.mot_green.iterate( im, xi_g )
-
 		# self.reward_g = self.mot_audio.iterate(au, xi_g)
 		self.data['E1'].append(self.state[0])
 		self.data['E2'].append(self.state[1])
 		self.data['rho'].append(self.state[2])
 		self.data['xi_r'].append(xi_r)
 		self.data['xi_g'].append(xi_g)
-		self.data['vel_l'].append( self.actions.forces[0]/0.2 )
-		self.data['vel_r'].append( self.actions.forces[1]/0.2 )
+		self.data['vel_l'].append( self.actions.forces[0] )
+		self.data['vel_r'].append( self.actions.forces[1] )
 		self.data['reward_r'].append( self.reward_r )
 		self.data['reward_g'].append( self.reward_g )
 
@@ -543,7 +547,7 @@ class HypothalamusController:
 		reward_g = np.array(self.data['reward_g'])
 		idx = np.arange(0, len(self.data['reward_r']))
 
-		self.fig, self.ax = plt.subplots(2,2)
+		
 		# Plotting drives
 		self.ax[0,0].plot( idx[reward_r == 1], 1.5*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
 		self.ax[0,0].plot( idx[reward_g == 1], 1.5*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
@@ -575,25 +579,45 @@ class HypothalamusController:
 		self.ax[1,1].plot( idx[reward_g == 1], 1.2*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
 		self.ax[1,1].plot( self.data['vel_l'], 'k',  linewidth= 2.0, label = "left" )
 		self.ax[1,1].plot( self.data['vel_r'], 'b',  linewidth= 2.0, label = "right" )		
-		self.ax[1,1].legend()
+		self.ax[1,1].legend( loc = 'upper right')
 		self.ax[1,1].set_title('Wheel speed')
 		self.ax[1,1].set_xlabel('Time step')
-		self.ax[1,1].set_ylabel('Speed')
+		self.ax[1,1].set_ylabel('Speed')		
 
 		# Plot in state space
-		fig, ax = plt.subplots(1,2)
-		ax[0].plot( np.heaviside(1.0-np.array(self.data['E1']), 0)*(1.0-np.array(self.data['E1'])), 
-					np.heaviside(1.0-np.array(self.data['E2']), 0)*(1.0-np.array(self.data['E2'])), 'k.-', linewidth = 1.0, markersize = 5 )
-		ax[0].grid()
-		ax[0].set_title('Trajectory of deficits')
-		ax[0].set_xlabel('Food deficit')
-		ax[0].set_xlabel('Water deficit')
+		E1_def = np.heaviside(1.0-np.array(self.data['E1']), 0)*(1.0-np.array(self.data['E1']))
+		E2_def = np.heaviside(1.0-np.array(self.data['E2']), 0)*(1.0-np.array(self.data['E2']))
+		self.ax2[0].plot( E1_def, E2_def, 'k', linewidth = 1.0 )
+		sE1 = E1_def[0:-1:100]
+		sE2 = E2_def[0:-1:100]
+		self.ax2[0].plot( sE1, sE2, 'k.', markersize = 4 )
+		self.ax2[0].plot( E1_def[0], E2_def[0], 'k^' )
+		self.ax2[0].plot( E1_def[-1], E2_def[-1], 'ks' )
+		self.ax2[0].grid()
+		self.ax2[0].set_title('Trajectory of deficits')
+		self.ax2[0].set_xlabel('Food deficit')
+		self.ax2[0].set_xlabel('Water deficit')
+		self.ax2[0].set_xlim((0, 1))
+		self.ax2[0].set_ylim((0, 1))
 
-		plot_boundaries( fig, ax[1] )
-		ax[1].plot( self.data['a'], self.data['b'])
-		ax[1].set_title( 'Motivational bifurcation' )
-		ax[1].set_xlabel('a')
-		ax[1].set_ylabel('b')
+		plot_boundaries( self.fig2, self.ax2[1] )
+		self.ax2[1].plot( self.data['a'], self.data['b'], 'k', linewidth = 0.5 )
+		self.ax2[1].plot( self.data['a'], self.data['b'], 'w', linewidth = 1.5 )
+		sA = self.data['a'][0:-1:100]
+		sB = self.data['b'][0:-1:100]
+		self.ax2[1].plot( sA, sB, 'k.', markersize = 4.0 )
+		self.ax2[1].plot( self.data['a'][0], self.data['b'][0], 'k^' )
+		self.ax2[1].plot( self.data['a'][-1], self.data['b'][-1], 'ks' )
+		self.ax2[1].set_title( 'Motivational bifurcation' )
+		self.ax2[1].set_xlabel('a')
+		self.ax2[1].set_ylabel('b')
 		# Statistics
 
+		# with open('data_miro_s0.npy', 'wb') as f:
+		# 	np.save( f, E1_def )
+		# 	np.save( f, E2_def )
+
+
 		plt.show()
+
+		
