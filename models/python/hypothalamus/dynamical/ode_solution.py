@@ -24,9 +24,9 @@ def evolve( T, rho0, a0, b0 ):
 
     return rho, t
 
-a0 = 0.4
-b0 = 0.4
-rho0 = -0.5
+a0 = 0.0
+b0 = 0.0
+rho0 = -0.01
 T = 100
 
 rho, t = evolve( T, rho0, a0, b0 )
@@ -54,9 +54,13 @@ rho_2 = lambda t: (3*c**2*r1 + m*r1)*t**2/2.0 - (3*c**2*r2*k/2.0 + 6*c*k*r1 + m*
                   (9*c**3*k**2/3.0 + 6*c*k**2*r2/2.0 + k**2*r1 + 3*m*c*k**2/3.0)*t**4/4.0 - \
                   (3*c**2*k**3/4.0 + 3*k**3*r2/2.0 + 18*c**2*k**3/3.0 + m*k**3/4.0)*t**5/5.0 + \
                   (6*c*k**4/4.0 + 9*c*k**4/3.0)*t**6/6.0 - (3*k**5/4.0)*t**7/7.0
-rho_t = lambda t: rho0 - k*t + rho_1(t) + rho_2(t)
-ax[0].plot( t, rho )
-ax[0].plot( t, rho_t(t))
+# rho_t = lambda t: rho0 - k*t + rho_1(t) + rho_2(t)
+c0 = (rho0**2 - 1)/rho0**2
+rho_t = lambda t, c0: np.sqrt(1.0/(1.0 - c0*np.exp(-2*t))) 
+ax[0].plot( t, rho, 'k--', linewidth = 2.0 )
+ax[0].plot( t, -rho_t(t, c0))
+ax[0].set_title('Theoretical base solution')
 ax[1].plot(rhos, U1(rhos, a0, b0))
+ax[1].set_title('Base potential shape')
 ax[0].set(xlim=(0, T), ylim=(-2.5, 2.5))
 plt.show()
