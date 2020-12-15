@@ -1,7 +1,7 @@
 import cv2
 import numpy as np 
 
-t_f = 5
+t_f = 0.1
 im = cv2.imread("balls.png")
 m,n,r = im.shape
 h = 0.01
