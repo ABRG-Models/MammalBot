@@ -7,19 +7,22 @@ import dash_html_components as html
 
 import plotly.graph_objs as go
 
+# Basal ganglia model
+# from model import BasalGanglia
+
 # Fixed BG values
-BG_CHANNELS = 4
+BG_CHANNELS = 5
 
 # Plot attributes
 PLOT_LENGTH = 100
-PLOT_COLOURS = (
+PLOT_COLOURS = [
 	'crimson',      # CH1
 	'steelblue',    # CH2
 	'seagreen',     # CH3
 	'purple',       # CH4
 	'darkorange',   # CH5
 	'sienna'        # CH6
-)
+]
 PLOT_GAP = 0.02
 PLOT_SHOWGRIDX = True
 PLOT_SHOWGRIDY = False
