@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 # Dash visualisation for the basal ganglia model
 
 # Plotly Dash components
@@ -21,18 +22,12 @@ from model import BasalGanglia
 import numpy as np
 
 ##########
-# Initialise model
-bg_model = BasalGanglia(channels=layout.BG_CHANNELS, lh=True, trn=False)
-bg_input = np.zeros(layout.BG_CHANNELS)
-lh_input = np.zeros(layout.BG_CHANNELS)
-
-##########
 # BG data structures
 bg_data = {
 	reg: {
 		pop: [go.Scatter() for _ in range(layout.BG_CHANNELS)]
-		for pop in bg_model.model[reg].keys()
-	} for reg in bg_model.model.keys()
+		for pop in BasalGanglia().model[reg].keys()
+	} for reg in BasalGanglia().model.keys()
 }
 bg_data['Input'] = [go.Scatter() for _ in range(layout.BG_CHANNELS)]
 
@@ -42,8 +37,8 @@ dash_storage = dcc.Store(
 	data={
 		reg: {
 			pop: [[] for _ in range(layout.BG_CHANNELS)]
-			for pop in bg_model.model[reg].keys()
-		} for reg in bg_model.model.keys()
+			for pop in BasalGanglia().model[reg].keys()
+		} for reg in BasalGanglia().model.keys()
 	}
 )
 dash_storage.data['Input'] = [[] for _ in range(layout.BG_CHANNELS)]
@@ -71,9 +66,7 @@ app.layout = html.Div([
 		Output('bg-store', 'data'),
 	],
 	[Input('interval-fast', 'n_intervals')],
-	[State('bg-store', 'data')]
-	+ [State('input-' + str(ch), 'value') for ch in range(layout.BG_CHANNELS)]
-	+ [State('lh-' + str(ch), 'value') for ch in range(layout.BG_CHANNELS)],
+	[State('bg-store', 'data')] + [State('input-' + str(ch), 'value') for ch in range(layout.BG_CHANNELS)] + [State('lh-' + str(ch), 'value') for ch in range(layout.BG_CHANNELS)],
 )
 def callback_update_plots(_, bg_history, *slider_values):
 	# FIXME: Apparent off-by-one error in plotting? Plot doesn't extend to edge
@@ -87,13 +80,14 @@ def callback_update_plots(_, bg_history, *slider_values):
 		lh_input[ch] = val
 
 	# Run BG one step
-	bg_model.step(bg_input, lh_approach=lh_input, lh_avoid=np.zeros(layout.BG_CHANNELS))
+	bg_model.step(bg_input, LH_APPROACH=lh_input, LH_AVOID=np.zeros(layout.BG_CHANNELS))
+	# bg_model.step(bg_input)
 
 	for ch in range(layout.BG_CHANNELS):
 		for reg in bg_model.model.keys():
 			for pop in bg_model.model[reg].keys():
 				# Append new data to plot history
-				bg_history[reg][pop][ch].append(bg_model.model[reg][pop].o[ch])
+				bg_history[reg][pop][ch].append(bg_model.model[reg][pop]['o'][ch])
 
 				# Trim existing data to plot length
 				if len(bg_history[reg][pop][ch]) > layout.PLOT_LENGTH:
@@ -145,12 +139,12 @@ def callback_update_plots(_, bg_history, *slider_values):
 	}
 
 	ventral_figure = {
-		'data'  : sum([bg_data['Ventral'][pop] for pop in bg_model.model['Ventral'].keys()], []),
+		'data'  : sum([bg_data['Ventral'][pop] for pop in BasalGanglia().model['Ventral'].keys()], []),
 		'layout': layout.dash_layouts['Ventral']
 	}
 
 	dorsal_figure = {
-		'data'  : sum([bg_data['Dorsal'][pop] for pop in bg_model.model['Dorsal'].keys()], []),
+		'data'  : sum([bg_data['Dorsal'][pop] for pop in BasalGanglia().model['Dorsal'].keys()], []),
 		'layout': layout.dash_layouts['Dorsal']
 	}
 
@@ -164,8 +158,11 @@ if __name__ == '__main__':
 	# Uncomment to suppress warnings TEMPORARILY
 	# app.config['suppress_callback_exceptions'] = True
 
+	# Initialise basal ganglia
+	bg_model = BasalGanglia(channels=layout.BG_CHANNELS)
+	bg_input = np.zeros(layout.BG_CHANNELS)
+	lh_input = np.zeros(layout.BG_CHANNELS)
+
 	# "debug=False" because hot reloading causes "IOError: [Errno 11] Resource temporarily unavailable" errors
 	# "host='0.0.0.0'" allows connections from non-localhost addresses
 	app.run_server(debug=False, host='0.0.0.0')
-
-	# TODO: Graphics output using pyqtgraph
