@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy.polynomial.polynomial as poly 
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 
 def add_embed_potential( x, y, a, b, low = 0.06, high = 0.2 ):
     U = lambda rho, a, b: rho**2*(1 - rho)**2 + a*rho**2 + b*(1 - rho)**2
@@ -25,7 +26,7 @@ ax = fig.gca(projection='3d')
 A = np.arange(0, 2, 0.01)
 B = np.arange(0, 2, 0.01)
 A, B = np.meshgrid(A, B)
-Z = -4*X**3 - 27*Y**2
+Z = -4*A**3 - 27*B**2
 # Z[Z<0] = -1
 # Z[Z==0] = 0
 # Plot the surface.
