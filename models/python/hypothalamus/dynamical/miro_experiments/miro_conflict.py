@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import rospy
 import miro2 as miro
 import os
@@ -19,6 +17,13 @@ import threading
 from hyp_controller import *
 from perception_controller import *
 
+import interface.miro_ros_interface as mri
+import interface.miro_actions as act
+
+miro_pub = mri.MiRoPublishers()
+miro_per = mri.MiRoPerception()
+miro_act = act.CosmeticActions()
+
 
 # Utility enums
 MAX_ITERATIONS = 10
@@ -28,163 +33,142 @@ droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
 
 class MiroController:
 
-    def __init__( self ):
-        # Set robot name
-        topic_root = "/" + os.getenv("MIRO_ROBOT_NAME")
-        rospy.init_node("sign_stimuli", anonymous=True)
-        # Define ROS publishers
-        self.pub_cmd_vel = rospy.Publisher(topic_root + "/control/cmd_vel", TwistStamped, queue_size=0)
-        self.pub_cos = rospy.Publisher(topic_root + "/control/cosmetic_joints", Float32MultiArray, queue_size=0)
-        self.pub_illum = rospy.Publisher(topic_root + "/control/illum", UInt32MultiArray, queue_size=0)
-        self.pub_kin = rospy.Publisher(topic_root + "/control/kinematic_joints", JointState, queue_size=0)
+	def __init__( self ):
+		# Set robot name
+		# topic_root = "/" + os.getenv("MIRO_ROBOT_NAME")
+		# rospy.init_node("sign_stimuli", anonymous=True)
+		# Define ROS publishers
+		# self.pub_cmd_vel = rospy.Publisher(topic_root + "/control/cmd_vel", TwistStamped, queue_size=0)
+		# self.pub_cos = rospy.Publisher(topic_root + "/control/cosmetic_joints", Float32MultiArray, queue_size=0)
+		# self.pub_illum = rospy.Publisher(topic_root + "/control/illum", UInt32MultiArray, queue_size=0)
+		# self.pub_kin = rospy.Publisher(topic_root + "/control/kinematic_joints", JointState, queue_size=0)
+		#
+		# # Subscribers
+		# #rospy.Subscriber(topic_root + '/sensors/package', miro.msg.sensors_package, self.touchListener)
+		# self.sub_caml = rospy.Subscriber(topic_root + "/sensors/caml/compressed",
+		# 								 CompressedImage, self.callback_caml, queue_size=1, tcp_nodelay=True)
+		# self.sub_camr = rospy.Subscriber(topic_root + "/sensors/camr/compressed",
+		# 								 CompressedImage, self.callback_camr, queue_size=1, tcp_nodelay=True)
+		# self.sub_mics = rospy.Subscriber(topic_root + "/sensors/mics", Int16MultiArray, self.callback_mics)
 
-        # Subscribers
-        #rospy.Subscriber(topic_root + '/sensors/package', miro.msg.sensors_package, self.touchListener)
-        self.sub_caml = rospy.Subscriber(topic_root + "/sensors/caml/compressed",
-                                         CompressedImage, self.callback_caml, queue_size=1, tcp_nodelay=True)
-        self.sub_camr = rospy.Subscriber(topic_root + "/sensors/camr/compressed",
-                                         CompressedImage, self.callback_camr, queue_size=1, tcp_nodelay=True)
-        self.sub_mics = rospy.Subscriber(topic_root + "/sensors/mics", Int16MultiArray, self.callback_mics)
+		# # Initializing object for data publishing
+		# self.velocity = TwistStamped()
+		# self.cos_joints = Float32MultiArray()
+		# self.cos_joints.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		# self.kin_joints = JointState()
+		# self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
+		# self.kin_joints.position = [0.0, math.radians(34.0), 0.0, 0.0]
+		# self.illum = UInt32MultiArray()
+		# self.illum.data = [0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF]
 
-        # Initializing object for data publishing
-        self.velocity = TwistStamped()
-        self.cos_joints = Float32MultiArray()
-        self.cos_joints.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        self.kin_joints = JointState()
-        self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
-        self.kin_joints.position = [0.0, math.radians(34.0), 0.0, 0.0]
-        self.illum = UInt32MultiArray()
-        self.illum.data = [0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF]
+		self.image = [None, None]
+		self.image_converter = CvBridge()
+		self.controller = HypothalamusController( self )
+		self.running = True
+		self.wag_t = 0.0
+		self.v = [0.0,0.0]
+		self.audio = None
 
-        self.image = [None, None]
-        self.image_converter = CvBridge()
-        self.controller = HypothalamusController( self )
-        self.running = True
-        self.wag_t = 0.0
-        self.v = [0.0,0.0]
-        self.audio = None
- 
-    def move( self, forces ):
-    	msg_cmd_vel = TwistStamped()
+	@staticmethod
+	def move(forces):
+		miro_pub.pub_cmd_vel_ms(left=forces[0], right=forces[1])
+		# pass
 
-    	# print forces
-    	# desired wheel speed (m/sec)
-    	wheel_speed = [forces[0], forces[1]]
-        # gamma = 0.25
-        # for i in range(2):
-        #     self.v[i] += gamma * (wheel_speed[i] - self.v[i])
-    	
-    	(dr, dtheta) = miro.utils.wheel_speed2cmd_vel(wheel_speed)
-    	msg_cmd_vel.twist.linear.x = dr
-    	msg_cmd_vel.twist.angular.z = dtheta
+	def stop( self ):
+		self.v = [0, 0]
+		self.move([0,0])
 
-    	# publish message to topic
-    	self.pub_cmd_vel.publish(msg_cmd_vel)
+	def moveHead( self, y ):
+		# self.kin_joints.position[lift] = math.radians(self.LiftControl.get_value())
+		# self.kin_joints.position[pitch] = math.radians(self.PitchControl.get_value())
+		# self.kin_joints.position[lift] = math.radians(y)
+		# self.pub_kin.publish( self.kin_joints )
 
-    # def move( self, forces ):
-    #     msg_cmd_vel = TwistStamped()
-    #     h = 0.01
-    #     k = 0.15
-    #     m = 1.0
-    #     v1 = self.v[0] + h*forces[0]/m - k*self.v[0]
-    #     v2 = self.v[1] + h*forces[1]/m - k*self.v[1]
-    #     # print forces
-    #     # desired wheel speed (m/sec)
-    #     wheel_speed = [v1, v2]
-    #     (dr, dtheta) = miro.utils.wheel_speed2cmd_vel(wheel_speed)
-    #     msg_cmd_vel.twist.linear.x = dr
-    #     msg_cmd_vel.twist.angular.z = dtheta
+		miro_pub.pub_kinematic_joints(lift=y)
 
-    #     # publish message to topic
-    #     self.pub_cmd_vel.publish(msg_cmd_vel)
-    #     self.v = [v1, v2]
+	@staticmethod
+	def shine( color, idxs = range(6), off = False ):
 
-    def stop( self ):
-        self.v = [0, 0]
-        self.move([0,0])
+		# for i in idxs:
+		# 	# if off:
+		# 	#     self.illum.data[i] = 0x00000000
+		# 	# else:
+		# 	self.illum.data[i] = color
+		#
+		# self.pub_illum.publish(self.illum)
 
-    def moveHead( self, y ):
-        # self.kin_joints.position[lift] = math.radians(self.LiftControl.get_value())
-        # self.kin_joints.position[pitch] = math.radians(self.PitchControl.get_value())
-        self.kin_joints.position[lift] = math.radians(y)
-        self.pub_kin.publish( self.kin_joints )
-
-    def shine( self, color, idxs = range(6), off = False ):
-        
-        for i in idxs:
-            # if off:
-            #     self.illum.data[i] = 0x00000000
-            # else:
-            self.illum.data[i] = color
-
-        self.pub_illum.publish(self.illum)
+		miro_pub.pub_illum(all=color)
 
 
-    def tailWag( self ):
-        MAX_TIME = 10
-        t = self.wag_t
-        A = 1.0
-        w = 2*np.pi*0.2
-        f = lambda t: A*np.cos(w*t)
+	def tailWag( self ):
+		# MAX_TIME = 10
+		# t = self.wag_t
+		# A = 1.0
+		# w = 2*np.pi*0.2
+		# f = lambda t: A*np.cos(w*t)
+		#
+		# if t > MAX_TIME:
+		# 	self.cos_joints.data[wag] = 0.5
+		# 	r = False
+		# 	self.wag_t = 0
+		# else:
+		# 	self.cos_joints.data[wag] = f(t)
+		# 	r = True
+		#
+		# self.cos_joints.data[droop] = 0.0
+		# self.pub_cos.publish(self.cos_joints)
+		# self.wag_t += 0.2
 
-        if t > MAX_TIME:
-            self.cos_joints.data[wag] = 0.5
-            r = False
-            self.wag_t = 0
-        else:
-            self.cos_joints.data[wag] = f(t)
-            r = True
-
-        self.cos_joints.data[droop] = 0.0
-        self.pub_cos.publish(self.cos_joints)
-        self.wag_t += 0.2
+		miro_act.wag(wags=2)
 
 
-    def callback_cam(self, ros_image, camera = LEFT):
+	# def callback_cam(self, ros_image, camera = LEFT):
+	#
+	# 	# silently (ish) handle corrupted JPEG frames
+	# 	try:
+	# 		# convert compressed ROS image to raw CV image
+	# 		self.image[camera] = self.image_converter.compressed_imgmsg_to_cv2(ros_image, "rgb8")
+	#
+	# 	except CvBridgeError as e:
+	#
+	# 		# swallow error, silently
+	# 		# print(e)
+	# 		pass
 
-        # silently (ish) handle corrupted JPEG frames
-        try:
-            # convert compressed ROS image to raw CV image
-            self.image[camera] = self.image_converter.compressed_imgmsg_to_cv2(ros_image, "rgb8")
+	# def callback_caml(self, ros_image):
+	# 	self.callback_cam( ros_image, LEFT )
+	#
+	# def callback_camr(self, ros_image):
+	# 	self.callback_cam( ros_image, RIGHT )
 
-        except CvBridgeError as e:
+	def callback_mics(self, data):
+		self.audio = data.data
 
-            # swallow error, silently
-            # print(e)
-            pass
+	# Main loop
+	def run( self ):
+		h = 0.01
+		t = 0.0
 
-    def callback_caml(self, ros_image):
-        self.callback_cam( ros_image, LEFT )
+		while not rospy.core.is_shutdown() and self.running:
+			# if self.image[0] is not None and self.image[1] is not None:
+			self.image = [miro_per.caml_undistorted, miro_per.camr_undistorted]
 
-    def callback_camr(self, ros_image):
-        self.callback_cam( ros_image, RIGHT )
+			self.controller.step(self.image, h, t, self.audio)
+			self.image = [None, None]
 
-    def callback_mics(self, data):
-        self.audio = data.data
+			# self.controller.plots()
 
-    # Main loop
-    def run( self ):
-        h = 0.01
-        t = 0.0
+			plt.pause(0.01)
+			t += h
 
-        while not rospy.core.is_shutdown() and self.running:
-            if self.image[0] is not None and self.image[1] is not None:
-                self.controller.step(self.image, h, t, self.audio)
-                self.image = [None, None]
+			# print("Time: " + str(t))
 
-            # self.controller.plots()
-              
-            plt.pause(0.01)
-            t += h
+			if t > 40.0:
+				self.running = False
 
-            print t
-            
-            if t > 40.0:
-                self.running = False
-
-        self.controller.plots()
+		# self.controller.plots()
 
 
 if __name__ == "__main__":
-    mc = MiroController()
-    mc.run()
+	mc = MiroController()
+	mc.run()

@@ -144,8 +144,8 @@ class MotivationalBrain( Brain ):
 		self.variables['dFood'] = self.D_food( E - self.preferred['E'] )
 		self.variables['dTemp'] = self.D_temp( Tb - self.preferred['Tb'] )
 
-		print "Drive temp: ", self.variables['dTemp'], "- diff: ", (Tb - self.Tp)
-		print "Drive E", self.variables['dFood'] 
+		print("Drive temp: ", self.variables['dTemp'], "- diff: ", (Tb - self.Tp))
+		print("Drive E", self.variables['dFood'])
 		
 		return dTb, dE
 
@@ -206,10 +206,10 @@ class MotivationalBrain( Brain ):
 		F_app = np.heaviside( self.variables['dFood'], 0.5 )*np.abs(self.variables['dFood'])
 		F_avoid = np.heaviside( -self.variables['dFood'], 0.5 )*np.abs(self.variables['dFood'])
 
-		print "T_app: ", T_app, ", T_avoid: ", T_avoid
-		print "F_app: ", F_app, ", F_avoid: ", F_avoid
-		print "mu_food: ", mu_food
-		print "mu_temp: ", mu_temp
+		print("T_app: ", T_app, ", T_avoid: ", T_avoid)
+		print("F_app: ", F_app, ", F_avoid: ", F_avoid)
+		print("mu_food: ", mu_food)
+		print("mu_temp: ", mu_temp)
 		F_temp = T_app*B + T_avoid*A
 		F_food = F_app*B + F_avoid*A
 		M_temp = mu_temp*F_temp
@@ -219,7 +219,7 @@ class MotivationalBrain( Brain ):
 					  np.dot(M_food, sensors_food) + \
 					  (np.random.random(2)-0.5)*0.00
 
-		print "Wheel drive: ", wheel_drive
+		print("Wheel drive: ", wheel_drive)
 
 		return wheel_drive
 

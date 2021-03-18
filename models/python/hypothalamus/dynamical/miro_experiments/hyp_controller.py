@@ -7,8 +7,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import entropy_percept as ep
 from plots_util import *
-
 from audio_perception import AudioPerception
+from interface.apriltag_perception import AprilTagPerception
+
 
 class VisualPerception:
 
@@ -184,7 +185,7 @@ class ActionSystem:
 		if location_y is None:
 			return
 
-		print "loc_y: ", location_y
+		print("loc_y: ", location_y)
 
 		if location_y == 1 and self.angle == 34:
 			self.angle = 60
@@ -397,6 +398,107 @@ class AudioMotivationalSystem(MotivationalSystem):
 		return r
 
 
+class TagMotivationalSystem(MotivationalSystem):
+	def __init__(self, actions, perception, tag_id, colour):
+		super(TagMotivationalSystem, self).__init__(actions, perception)
+		self.stim_x = None
+		self.stim_y = None
+		self.elapsed = 0
+
+		self.atp = AprilTagPerception(size=3.1)
+
+		self.tag_id = tag_id
+		self.colour = colour
+
+	def perceive(self, images, xi):
+		if images is None:
+			self.stim_x = None
+			self.stim_y = None
+			return
+
+		caml = images[0]
+		camr = images[1]
+
+		#FIXME: Do both eyes at once
+		tags_left = self.atp.detect_tags(caml)
+		tags_right = self.atp.detect_tags(camr)
+
+		if tags_left is not None:
+			distance_left = [t.distance for t in tags_left if t.id == self.tag_id]
+			location_left = [t.centre for t in tags_left if t.id == self.tag_id]
+
+			[self.atp.draw_box(tag=t, image=caml, colour=self.colour) for t in tags_left if t.id == self.tag_id]
+			[self.atp.draw_center(tag=t, image=caml, colour='magenta') for t in tags_left if t.id == self.tag_id]
+
+			try:
+				print('Distance (left) to tag {0} is {1:.2f}'.format(self.tag_id, distance_left[0]))
+				print('Centre (left) of tag {0} is {1}'.format(self.tag_id, location_left[0]))
+			except IndexError:
+				pass
+
+
+		if tags_right is not None:
+			distance_right = [t.distance for t in tags_right if t.id == self.tag_id]
+			location_right = [t.centre for t in tags_right if t.id == self.tag_id]
+
+			[self.atp.draw_box(tag=t, image=camr, colour=self.colour) for t in tags_right if t.id == self.tag_id]
+			[self.atp.draw_center(tag=t, image=camr, colour='magenta') for t in tags_right if t.id == self.tag_id]
+
+			# cv2.imwrite("/home/dbx/camr_tag.png", camr)
+
+		# TESTING
+		# WHY AM I GETTING DUPLICATES
+		try:
+			if location_left[0] < 640 / 2:
+				self.stim_x = -1
+			elif location_right[0] > 640 / 2:
+				self.stim_x = 1
+			else:
+				self.stim_x = 0
+		except UnboundLocalError:
+			self.stim_x = 0
+		except IndexError:
+			self.stim_x = 0
+
+		try:
+			if location_left[1] < 360 / 2 or location_right[1] < 360 / 2:
+				self.stim_y = -1
+			elif location_left[1] > 360 / 2 or location_right[1] > 360 / 2:
+				self.stim_y = 1
+			else:
+				self.stim_y = 0
+		except UnboundLocalError:
+			self.stim_y = 0
+		except IndexError:
+			self.stim_x = 0
+
+	def express( self, xi ):
+		self.actions.shine( self.colour, xi )
+
+		if self.s == 2:
+			self.actions.wag()
+
+	def behave( self, xi ):
+		if self.stim_x is None and self.s != 0:
+			self.elapsed += 1
+
+			if self.elapsed > 20:
+				self.s = 0
+				self.elapsed = 0
+
+		elif  self.stim_x is not None and self.s == 0:
+			self.s = 1
+			self.elapsed = 0
+			self.actions.stop()
+
+		if self.s == 0:
+			if xi > 0.5:
+				self.actions.search(1)
+		elif self.s == 1:
+			self.actions.follow( self.stim_x, xi )
+			self.s = 1
+
+
 class HypothalamusController:
 	def __init__( self, robot ):
 		self.s0 = np.array([0.1, 0.15, 0.0])
@@ -407,10 +509,13 @@ class HypothalamusController:
 		self.audio_perception = AudioPerception()
 
 		self.actions = ActionSystem( robot )
-		self.mot_green = GreenMotivationalSystem(self.actions, self.perception)
-		self.mot_red = RedMotivationalSystem( self.actions, self.perception)
+		# self.mot_green = GreenMotivationalSystem(self.actions, self.perception)
+		# self.mot_red = RedMotivationalSystem( self.actions, self.perception)
+		#
+		# self.mot_audio = AudioMotivationalSystem( self.actions, self.audio_perception)
 
-		self.mot_audio = AudioMotivationalSystem( self.actions, self.audio_perception)
+		self.mot_red = TagMotivationalSystem(self.actions, self.perception, tag_id=6, colour='red')
+		self.mot_green = TagMotivationalSystem(self.actions, self.perception, tag_id=0, colour='green')
 
 		self.preferred = {'E1' : 1.0, 'E2': 1.0, 'Rho': None}
 		self.variables = {'DGreen': 0.0, 'DRed': 0.0, 'mu_green': 0.0, 'mu_red': 0.0}
