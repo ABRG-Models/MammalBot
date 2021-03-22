@@ -72,7 +72,6 @@ class MiroController:
 	@staticmethod
 	def move(forces):
 		miro_pub.pub_cmd_vel_ms(left=forces[0], right=forces[1])
-		# pass
 
 	def stop( self ):
 		self.v = [0, 0]
@@ -98,6 +97,7 @@ class MiroController:
 		# self.pub_illum.publish(self.illum)
 
 		miro_pub.pub_illum(all=color)
+		miro_pub.ros_sleep(0.5)
 
 
 	def tailWag( self ):
@@ -119,7 +119,9 @@ class MiroController:
 		# self.pub_cos.publish(self.cos_joints)
 		# self.wag_t += 0.2
 
-		miro_act.wag(wags=2)
+		# miro_act.wag(wags=1)
+		miro_pub.pub_illum(all='blue')
+		print('wag')
 
 
 	# def callback_cam(self, ros_image, camera = LEFT):
@@ -145,7 +147,7 @@ class MiroController:
 		self.audio = data.data
 
 	# Main loop
-	def run( self ):
+	def run(self):
 		h = 0.01
 		t = 0.0
 
@@ -154,6 +156,11 @@ class MiroController:
 			self.image = [miro_per.caml_undistorted, miro_per.camr_undistorted]
 
 			self.controller.step(self.image, h, t, self.audio)
+
+			# cv2.imshow('LEFT', self.image[0])
+			# cv2.imshow('RIGHT', self.image[1])
+			# cv2.waitKey(5)
+
 			self.image = [None, None]
 
 			# self.controller.plots()
@@ -161,7 +168,7 @@ class MiroController:
 			plt.pause(0.01)
 			t += h
 
-			# print("Time: " + str(t))
+			# print("Time: {:.2f}".format(t))
 
 			if t > 40.0:
 				self.running = False

@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('..')
 import brainsv2 as brains
 from sensors import *
@@ -13,7 +14,7 @@ from interface.apriltag_perception import AprilTagPerception
 
 class VisualPerception:
 
-	def isClose( self, images, r ):
+	def isClose(self, images, r):
 
 		m1 = np.mean(images[0])
 		m2 = np.mean(images[1])
@@ -24,7 +25,7 @@ class VisualPerception:
 
 		return False
 
-	def getColor( self, image, x, y, r ):
+	def getColor(self, image, x, y, r):
 		if image is None:
 			return None
 
@@ -32,38 +33,38 @@ class VisualPerception:
 		image[1] = cv2.equalizeHist(image[1])
 		image[2] = cv2.equalizeHist(image[2])
 		boundaries = [
-		([17, 100, 15], [50, 230, 56]),
-		([86, 31, 4], [220, 88, 50])
+			([17, 100, 15], [50, 230, 56]),
+			([86, 31, 4], [220, 88, 50])
 		]
 
 		# for (lower, upper) in boundaries:
 		lower, upper = boundaries[0]
 		# create NumPy arrays from the boundaries
-		lower = np.array(lower, dtype = "uint8")
-		upper = np.array(upper, dtype = "uint8")
+		lower = np.array(lower, dtype="uint8")
+		upper = np.array(upper, dtype="uint8")
 		# find the colors within the specified boundaries and apply
 		# the mask
 		mask = cv2.inRange(image, lower, upper)
-		output_g = cv2.bitwise_and(image, image, mask = mask)
+		output_g = cv2.bitwise_and(image, image, mask=mask)
 
 		lower, upper = boundaries[1]
 		# create NumPy arrays from the boundaries
-		lower = np.array(lower, dtype = "uint8")
-		upper = np.array(upper, dtype = "uint8")
+		lower = np.array(lower, dtype="uint8")
+		upper = np.array(upper, dtype="uint8")
 		# find the colors within the specified boundaries and apply
 		# the mask
 		mask = cv2.inRange(image, lower, upper)
-		output_r = cv2.bitwise_and(image, image, mask = mask)
+		output_r = cv2.bitwise_and(image, image, mask=mask)
 
-		mg = np.mean( output_g )
-		mr = np.mean( output_r )
+		mg = np.mean(output_g)
+		mr = np.mean(output_r)
 
 		if mr > mg:
 			return 'red'
 		else:
 			return 'green'
 
-	def _locateCircle( self, img ):
+	def _locateCircle(self, img):
 		# img = cv2.resize(img, (320, 240))
 		gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 		# Blur using 3 * 3 kernel.
@@ -71,41 +72,41 @@ class VisualPerception:
 
 		# Apply Hough transform on the blurred image.
 		detected_circles = cv2.HoughCircles(gray_blurred,
-						cv2.HOUGH_GRADIENT, 1, 2, param1 = 90,
-					param2 = 50, minRadius = 2, maxRadius = 200)
+		                                    cv2.HOUGH_GRADIENT, 1, 2, param1=90,
+		                                    param2=50, minRadius=2, maxRadius=200)
 
 		return detected_circles
 
-	def _filterInput( self, img, circles, color ):
+	def _filterInput(self, img, circles, color):
 		if circles is not None:
-   
+
 			detected_circles = np.uint16(np.around(circles))
 
 			for pt in detected_circles[0, :]:
 				a, b, r = pt[0], pt[1], pt[2]
 
-				if self.getColor( img, a, b, r ) == color:
+				if self.getColor(img, a, b, r) == color:
 					return [a, b, r]
 
 		return None
 
-	def locateCircle( self, images, color, draw = False ):
+	def locateCircle(self, images, color, draw=False):
 		if images is None:
 			return None
 
-		m,n,_ = images[0].shape
+		m, n, _ = images[0].shape
 		# print m,n
-		circle_left = self._locateCircle( images[0] )
-		circle_right = self._locateCircle( images[1] )
+		circle_left = self._locateCircle(images[0])
+		circle_right = self._locateCircle(images[1])
 
 		r_max = 0
-		c_left = self._filterInput( images[0], circle_left, color )
-		c_right = self._filterInput( images[1], circle_right, color )
+		c_left = self._filterInput(images[0], circle_left, color)
+		c_right = self._filterInput(images[1], circle_right, color)
 
 		return c_left, c_right
 
 	def getStimulusPositionAndSize(self, images, color):
-		c_left, c_right = self.locateCircle( images, color )
+		c_left, c_right = self.locateCircle(images, color)
 		stim_x = None
 		stim_y = None
 		object_size = 0
@@ -113,23 +114,23 @@ class VisualPerception:
 		if c_left is None and c_right is None:
 			return stim_x, stim_y, object_size
 
-		n,m,_ = images[0].shape
+		n, m, _ = images[0].shape
 
-		sigma = m/3.0
-		gl = lambda x: np.exp(-((float(x) - 0)**2)/(2*sigma**2))
-		gc = lambda x: np.exp(-((-float(x) + m)**2)/(2*sigma**2))
-		pl_l, pl_c, pr_c, pr_r = [0]*4
-		y_pos = n/2.0
+		sigma = m / 3.0
+		gl = lambda x: np.exp(-((float(x) - 0) ** 2) / (2 * sigma ** 2))
+		gc = lambda x: np.exp(-((-float(x) + m) ** 2) / (2 * sigma ** 2))
+		pl_l, pl_c, pr_c, pr_r = [0] * 4
+		y_pos = n / 2.0
 		# left image
 		if c_left is not None:
-			pl_l = gl( c_left[0] )
-			pl_c = gc( c_left[0] )
+			pl_l = gl(c_left[0])
+			pl_c = gc(c_left[0])
 			object_size = c_left[2]
 			y_pos = c_left[1]
 		# right image
 		if c_right is not None:
-			pr_c = gl( c_right[0] )
-			pr_r = gc( c_right[0] )
+			pr_c = gl(c_right[0])
+			pr_r = gc(c_right[0])
 			object_size = c_right[2]
 			y_pos = c_right[1]
 
@@ -142,25 +143,26 @@ class VisualPerception:
 			stim_x = 0
 
 		# print "y_pos: ", y_pos, ", thr: ", 2*n/3.0
-		if y_pos < n/3.0:
+		if y_pos < n / 3.0:
 			stim_y = -1
-		elif y_pos > 2*n/3.0:
+		elif y_pos > 2 * n / 3.0:
 			stim_y = 1
 		else:
 			stim_y = 0
 
 		return stim_x, stim_y, object_size
 
+
 class ActionSystem:
-	def __init__( self, robot ):
+	def __init__(self, robot):
 		self.robot = robot
 		self.angle = 34
 		self.forces = [0.0, 0.0]
 
-	def wag( self ):
+	def wag(self):
 		self.robot.tailWag()
 
-	def follow( self, location, xi ):
+	def follow(self, location, xi):
 		forces = [0.0, 0.0]
 
 		if location is None:
@@ -172,16 +174,16 @@ class ActionSystem:
 		v = 0.5
 
 		if location == -1:
-			forces[1] = v*xi
+			forces[1] = v * xi
 		elif location == 1:
-			forces[0] = v*xi
+			forces[0] = v * xi
 		elif location == 0:
-			forces = [v*xi, v*xi]
+			forces = [v * xi, v * xi]
 
-		self.robot.move( forces )
+		self.robot.move(forces)
 		self.forces = forces
 
-	def track( self, location_y, xi ):
+	def track(self, location_y, xi):
 		if location_y is None:
 			return
 
@@ -189,41 +191,41 @@ class ActionSystem:
 
 		if location_y == 1 and self.angle == 34:
 			self.angle = 60
-		elif location_y == -1  and self.angle == 60:
+		elif location_y == -1 and self.angle == 60:
 			self.angle = 34
-		elif location_y == -1  and self.angle == 34:
+		elif location_y == -1 and self.angle == 34:
 			self.angle = 1
-		elif location_y == 1  and self.angle == 1:
+		elif location_y == 1 and self.angle == 1:
 			self.angle = 34
 
-		self.robot.moveHead( self.angle )
+		self.robot.moveHead(self.angle)
 
-	def search( self, dir ):
-		v = dir*0.1
+	def search(self, dir):
+		v = dir * 0.1
 		self.forces = [0, v]
-		self.robot.move( self.forces )
+		self.robot.move(self.forces)
 
-	def backtrack( self ):
+	def backtrack(self):
 		v = -0.2
 		forces = [v, v]
-		self.robot.move( forces )
+		self.robot.move(forces)
 
-	def shine( self, color, xi ):
+	def shine(self, color, xi):
 		idxs = []
 		if color == 'red':
-			idxs = range(int(xi*6))
+			idxs = range(int(xi * 6))
 			c = 0xFFFF0000
 		elif color == 'green':
-			idxs = [6 - x - 1 for x in range(int(xi*6))]
+			idxs = [6 - x - 1 for x in range(int(xi * 6))]
 			c = 0xFF00FF00
 		else:
 			c = 0x00000000
 
-		self.robot.shine( c, idxs )
+		self.robot.shine(c, idxs)
 
-
-	def stop( self ):
+	def stop(self):
 		self.robot.stop()
+
 
 class MotivationalSystem(object):
 	def __init__(self, actions, perception):
@@ -236,18 +238,18 @@ class MotivationalSystem(object):
 	def perceive(self, images, xi):
 		pass
 
-	def express( self, xi ):
+	def express(self, xi):
 		pass
 
-	def behave( self, xi ):
+	def behave(self, xi):
 		pass
 
-	def iterate( self, images, xi ):
-		self.perceive( images, xi )
-		self.express( xi )
-		self.behave( xi )
+	def iterate(self, images, xi):
+		self.perceive(images, xi)
+		self.express(xi)
+		self.behave(xi)
 
-		r = self.perception.isClose( images, self.object_size )
+		r = self.perception.isClose(images, self.object_size)
 
 		if r == 1 and xi > 0.5:
 			self.actions.stop()
@@ -255,6 +257,7 @@ class MotivationalSystem(object):
 			self.object_size = 0
 
 		return r
+
 
 class RedMotivationalSystem(MotivationalSystem):
 	def __init__(self, actions, perception):
@@ -270,13 +273,13 @@ class RedMotivationalSystem(MotivationalSystem):
 
 		self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(images, 'red')
 
-	def express( self, xi ):
-		self.actions.shine( 'red', xi )
+	def express(self, xi):
+		self.actions.shine('red', xi)
 
 		if self.s == 2:
 			self.actions.wag()
 
-	def behave( self, xi ):
+	def behave(self, xi):
 		if self.stim_x is None and self.s != 0:
 			self.elapsed += 1
 
@@ -284,7 +287,7 @@ class RedMotivationalSystem(MotivationalSystem):
 				self.s = 0
 				self.elapsed = 0
 
-		elif  self.stim_x is not None and self.s == 0:
+		elif self.stim_x is not None and self.s == 0:
 			self.s = 1
 			self.elapsed = 0
 			self.actions.stop()
@@ -293,7 +296,7 @@ class RedMotivationalSystem(MotivationalSystem):
 			if xi > 0.5:
 				self.actions.search(-1)
 		elif self.s == 1:
-			self.actions.follow( self.stim_x, xi )
+			self.actions.follow(self.stim_x, xi)
 			self.s = 1
 
 
@@ -312,13 +315,13 @@ class GreenMotivationalSystem(MotivationalSystem):
 
 		self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(images, 'green')
 
-	def express( self, xi ):
-		self.actions.shine( 'green', xi )
+	def express(self, xi):
+		self.actions.shine('green', xi)
 
 		if self.s == 2:
 			self.actions.wag()
 
-	def behave( self, xi ):
+	def behave(self, xi):
 		if self.stim_x is None and self.s != 0:
 			self.elapsed += 1
 
@@ -326,7 +329,7 @@ class GreenMotivationalSystem(MotivationalSystem):
 				self.s = 0
 				self.elapsed = 0
 
-		elif  self.stim_x is not None and self.s == 0:
+		elif self.stim_x is not None and self.s == 0:
 			self.s = 1
 			self.elapsed = 0
 			self.actions.stop()
@@ -335,7 +338,7 @@ class GreenMotivationalSystem(MotivationalSystem):
 			if xi > 0.5:
 				self.actions.search(1)
 		elif self.s == 1:
-			self.actions.follow( self.stim_x, xi )
+			self.actions.follow(self.stim_x, xi)
 			self.s = 1
 
 
@@ -343,7 +346,8 @@ class AudioMotivationalSystem(MotivationalSystem):
 	def __init__(self, actions, perception):
 		super(AudioMotivationalSystem, self).__init__(actions, perception)
 		self.stim_x = None
-		# self.stim_y = None
+
+	# self.stim_y = None
 
 	def perceive(self, audio, xi):
 		if audio is None:
@@ -363,7 +367,8 @@ class AudioMotivationalSystem(MotivationalSystem):
 			self.stim_x = 0
 
 		print('Audio direction: ' + str(self.stim_x))
-		# self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(images, 'red')
+
+	# self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(images, 'red')
 
 	def express(self, xi):
 		self.actions.shine('green', xi)
@@ -377,18 +382,18 @@ class AudioMotivationalSystem(MotivationalSystem):
 				self.actions.follow(self.stim_x, xi)
 			print("reward:" + str(xi))
 
-	def iterate( self, audio, xi ):
-		self.perceive( audio, xi )
-		self.express( xi )
-		self.behave( xi )
+	def iterate(self, audio, xi):
+		self.perceive(audio, xi)
+		self.express(xi)
+		self.behave(xi)
 
 		rs = self.perception.isClose(audio)
-		
+
 		r = rs[0]
 		# if r == 1:
 		# 	self.actions.stop()
 
-		if r == 1  and xi > 0.5:
+		if r == 1 and xi > 0.5:
 			self.actions.stop()
 			self.s = 2
 			self.object_size = 0
@@ -405,80 +410,155 @@ class TagMotivationalSystem(MotivationalSystem):
 		self.stim_y = None
 		self.elapsed = 0
 
-		self.atp = AprilTagPerception(size=3.1)
+		self.atp = AprilTagPerception(size=8.15)
 
 		self.tag_id = tag_id
 		self.colour = colour
 
-	def perceive(self, images, xi):
-		if images is None:
-			self.stim_x = None
-			self.stim_y = None
-			return
+		self.distance = None
 
+	def perceive(self, images, xi):
+		def tag_distance_and_location(tags, tag_id):
+			distance = [t.distance for t in tags if t.id == tag_id]
+			location = [t.centre for t in tags if t.id == tag_id]
+
+			if distance:
+				return distance[0], location[0]
+			else:
+				return None, None
+
+		def annotate_image(image, tags, colour, tag_id):
+			[self.atp.draw_box(tag=t, image=image, colour=colour) for t in tags if t.id == tag_id]
+			[self.atp.draw_center(tag=t, image=image, colour='magenta') for t in tags if t.id == tag_id]
+
+		# Main
+		# if images is None:
+		# 	self.stim_x = None
+		# 	self.stim_y = None
+		# 	return
+
+		# FIXME: Do both eyes at once
 		caml = images[0]
 		camr = images[1]
-
-		#FIXME: Do both eyes at once
 		tags_left = self.atp.detect_tags(caml)
 		tags_right = self.atp.detect_tags(camr)
 
-		if tags_left is not None:
-			distance_left = [t.distance for t in tags_left if t.id == self.tag_id]
-			location_left = [t.centre for t in tags_left if t.id == self.tag_id]
+		distance_left = location_left = distance_right = location_right = self.distance = None
 
-			[self.atp.draw_box(tag=t, image=caml, colour=self.colour) for t in tags_left if t.id == self.tag_id]
-			[self.atp.draw_center(tag=t, image=caml, colour='magenta') for t in tags_left if t.id == self.tag_id]
-
-			try:
-				print('Distance (left) to tag {0} is {1:.2f}'.format(self.tag_id, distance_left[0]))
-				print('Centre (left) of tag {0} is {1}'.format(self.tag_id, location_left[0]))
-			except IndexError:
-				pass
-
-
-		if tags_right is not None:
-			distance_right = [t.distance for t in tags_right if t.id == self.tag_id]
-			location_right = [t.centre for t in tags_right if t.id == self.tag_id]
-
-			[self.atp.draw_box(tag=t, image=camr, colour=self.colour) for t in tags_right if t.id == self.tag_id]
-			[self.atp.draw_center(tag=t, image=camr, colour='magenta') for t in tags_right if t.id == self.tag_id]
-
-			# cv2.imwrite("/home/dbx/camr_tag.png", camr)
-
-		# TESTING
-		# WHY AM I GETTING DUPLICATES
 		try:
-			if location_left[0] < 640 / 2:
+			[distance_left, location_left] = tag_distance_and_location(tags=tags_left, tag_id=self.tag_id)
+			annotate_image(image=caml, tags=tags_left, colour=self.colour, tag_id=self.tag_id)
+		# If no left tags exist
+		except TypeError:
+			pass
+
+		try:
+			[distance_right, location_right] = tag_distance_and_location(tags=tags_right, tag_id=self.tag_id)
+			annotate_image(image=camr, tags=tags_right, colour=self.colour, tag_id=self.tag_id)
+		# If no right tags exist
+		except TypeError:
+			pass
+
+		# try:
+		# 	print('Distance (left) to tag {0} is {1:.2f}'.format(self.tag_id, distance_left))
+		# 	print('Centre (left) of tag {0} is {1}'.format(self.tag_id, location_left[0]))
+		# except UnboundLocalError:
+		# 	pass
+
+		# TODO: TIDY THIS UP
+		try:
+			# X value
+			if location_left[0] < caml.shape[1] / 2:
 				self.stim_x = -1
-			elif location_right[0] > 640 / 2:
-				self.stim_x = 1
+				print('Tag left!')
 			else:
 				self.stim_x = 0
-		except UnboundLocalError:
-			self.stim_x = 0
-		except IndexError:
-			self.stim_x = 0
 
-		try:
-			if location_left[1] < 360 / 2 or location_right[1] < 360 / 2:
+			# Y value
+			if location_left[1] < caml.shape[0] / 2:
 				self.stim_y = -1
-			elif location_left[1] > 360 / 2 or location_right[1] > 360 / 2:
+			elif location_left[1] > caml.shape[0] / 2:
 				self.stim_y = 1
 			else:
 				self.stim_y = 0
-		except UnboundLocalError:
-			self.stim_y = 0
-		except IndexError:
-			self.stim_x = 0
+		# If no left tags exist
+		except (UnboundLocalError, TypeError):
+			pass
 
-	def express( self, xi ):
-		self.actions.shine( self.colour, xi )
+		try:
+			# X value
+			if location_right[0] > camr.shape[1] / 2:
+				# Sanity check
+				if self.stim_x == -1:
+					raise Exception('Tag identified as both left and right')
+				else:
+					self.stim_x = 1
+					print('Tag right!')
+			else:
+				self.stim_x = 0
+
+			# Y value
+			if location_right[1] < camr.shape[0] / 2:
+				self.stim_y = -1
+			elif location_right[1] > camr.shape[0] / 2:
+				self.stim_y = 1
+			else:
+				self.stim_y = 0
+		# If no right tags exist
+		except (UnboundLocalError, TypeError):
+			self.stim_x = None
+			self.stim_y = None
+
+		# Get distance
+		try:
+			self.distance = np.min([distance_left, distance_right])
+		# If either value doesn't exist
+		except (UnboundLocalError, TypeError):
+			try:
+				self.distance = distance_left
+			except (UnboundLocalError, TypeError):
+				try:
+					self.distance = distance_right
+				except (UnboundLocalError, TypeError):
+					# print('no distance values')
+					pass
+
+		try:
+			print('Distance to tag {}: {:.1f}cm'.format(self.tag_id, self.distance))
+		except TypeError:
+			pass
+
+	def iterate(self, images, xi):
+		self.perceive(images, xi)
+		self.express(xi)
+		self.behave(xi)
+
+		# r = self.perception.isClose(images, self.object_size)
+
+		try:
+			if self.distance < 40 and xi > 0.5:
+				self.actions.stop()
+				self.s = 2
+				self.object_size = 0
+
+				print("I'm close!")
+
+				r = True
+			else:
+				r = False
+		# If distance is 'None'
+		except TypeError:
+			r = False
+
+		return r
+
+	def express(self, xi):
+		self.actions.shine(self.colour, xi)
 
 		if self.s == 2:
 			self.actions.wag()
 
-	def behave( self, xi ):
+	def behave(self, xi):
 		if self.stim_x is None and self.s != 0:
 			self.elapsed += 1
 
@@ -486,7 +566,7 @@ class TagMotivationalSystem(MotivationalSystem):
 				self.s = 0
 				self.elapsed = 0
 
-		elif  self.stim_x is not None and self.s == 0:
+		elif self.stim_x is not None and self.s == 0:
 			self.s = 1
 			self.elapsed = 0
 			self.actions.stop()
@@ -495,12 +575,12 @@ class TagMotivationalSystem(MotivationalSystem):
 			if xi > 0.5:
 				self.actions.search(1)
 		elif self.s == 1:
-			self.actions.follow( self.stim_x, xi )
+			self.actions.follow(self.stim_x, xi)
 			self.s = 1
 
 
 class HypothalamusController:
-	def __init__( self, robot ):
+	def __init__(self, robot):
 		self.s0 = np.array([0.1, 0.15, 0.0])
 		self.state = self.s0
 		self.robot = robot
@@ -508,52 +588,52 @@ class HypothalamusController:
 
 		self.audio_perception = AudioPerception()
 
-		self.actions = ActionSystem( robot )
+		self.actions = ActionSystem(robot)
 		# self.mot_green = GreenMotivationalSystem(self.actions, self.perception)
 		# self.mot_red = RedMotivationalSystem( self.actions, self.perception)
 		#
 		# self.mot_audio = AudioMotivationalSystem( self.actions, self.audio_perception)
 
 		self.mot_red = TagMotivationalSystem(self.actions, self.perception, tag_id=6, colour='red')
-		self.mot_green = TagMotivationalSystem(self.actions, self.perception, tag_id=0, colour='green')
+		self.mot_green = TagMotivationalSystem(self.actions, self.perception, tag_id=7, colour='green')
 
-		self.preferred = {'E1' : 1.0, 'E2': 1.0, 'Rho': None}
+		self.preferred = {'E1': 1.0, 'E2': 1.0, 'Rho': None}
 		self.variables = {'DGreen': 0.0, 'DRed': 0.0, 'mu_green': 0.0, 'mu_red': 0.0}
 		self.reward_r = 0
 		self.reward_g = 0
 		self.diff_heat = 0.1
 		self.images = None
 		self.audio = 0
-		self.fig, self.ax = plt.subplots(2,2)
-		self.fig2, self.ax2 = plt.subplots(1,2)
+		self.fig, self.ax = plt.subplots(2, 2)
+		self.fig2, self.ax2 = plt.subplots(1, 2)
 
-		self.data = {'E1':[], 'E2': [], 'rho': [], 'xi_r': [], 'xi_g': [], 
-					 'reward_g': [], 'reward_r': [], 'vel_l': [], 'vel_r':[],
-					 'a':[], 'b':[]}
+		self.data = {'E1'      : [], 'E2': [], 'rho': [], 'xi_r': [], 'xi_g': [],
+		             'reward_g': [], 'reward_r': [], 'vel_l': [], 'vel_r': [],
+		             'a'       : [], 'b': []}
 
 		self.initMaps()
 
-	def initMaps( self ):
+	def initMaps(self):
 		# Drive map green
 		G_g = 2.0
 		sigma_g = 10.0
 		x0 = 0.0
-		N_green = lambda x: G_g/(1 + np.exp(-sigma_g*(x - x0))) - G_g/2.0
-		U_green = lambda x: x**3
-		self.D_green = lambda x: U_green( N_green(x) )
+		N_green = lambda x: G_g / (1 + np.exp(-sigma_g * (x - x0))) - G_g / 2.0
+		U_green = lambda x: x ** 3
+		self.D_green = lambda x: U_green(N_green(x))
 		# Drive map Red
 		G_r = 2.0
 		sigma_r = 10.0
 		x0 = 0.0
-		N_red = lambda x: G_r/(1 + np.exp(-sigma_r*(x - x0))) - G_r/2.0
-		U_red = lambda x: x**3
-		self.D_red = lambda x: U_red( N_red(x) )
+		N_red = lambda x: G_r / (1 + np.exp(-sigma_r * (x - x0))) - G_r / 2.0
+		U_red = lambda x: x ** 3
+		self.D_red = lambda x: U_red(N_red(x))
 		# Incentive maps
 		sigma_c = 0.5
-		self.xi = lambda x,x0: np.exp(-(x - x0)**2/(2*sigma_c**2))
+		self.xi = lambda x, x0: np.exp(-(x - x0) ** 2 / (2 * sigma_c ** 2))
 
-	def drive_map( self, E1, E2, reward_g, reward_r ):
-		
+	def drive_map(self, E1, E2, reward_g, reward_r):
+
 		# Computing physiological state
 		alpha = 0.1
 		beta = 0.1
@@ -562,36 +642,36 @@ class HypothalamusController:
 
 		# print "reward r: ", reward_r, ", Reward g: ", reward_g
 
-		dE1 = -alpha*G + (reward_g*sr if E1 < 1 else 0.0)
-		dE2 = -beta*G + (reward_r*sr if E2 < 1 else 0.0)
+		dE1 = -alpha * G + (reward_g * sr if E1 < 1 else 0.0)
+		dE2 = -beta * G + (reward_r * sr if E2 < 1 else 0.0)
 
 		# print "dE1: ", dE1, ", dE2: ", dE2
 		# Setting up the drives
-		self.variables['dGreen'] = self.D_green( E1 - self.preferred['E1'] )
-		self.variables['dRed'] = self.D_red( E2 - self.preferred['E2'] )
+		self.variables['dGreen'] = self.D_green(E1 - self.preferred['E1'])
+		self.variables['dRed'] = self.D_red(E2 - self.preferred['E2'])
 
 		return dE1, dE2
 
-	def motivation_map( self, h, rho ):
+	def motivation_map(self, h, rho):
 		L = 20.0
 
 		a_strength = 1.0
 		b_strength = 1.0
 		# Competition parameters
-		a = np.abs(self.variables['dGreen'])*a_strength
-		b = np.abs(self.variables['dRed'])*b_strength
+		a = np.abs(self.variables['dGreen']) * a_strength
+		b = np.abs(self.variables['dRed']) * b_strength
 		self.data['a'].append(a)
 		self.data['b'].append(b)
 
-		U = lambda rho: rho**2*(1 - rho)**2 + a*rho**2 + b*(1 - rho)**2
-		dU = lambda rho: (rho*((1-rho)**2 + a) - (1-rho)*(rho**2 + b))
+		U = lambda rho: rho ** 2 * (1 - rho) ** 2 + a * rho ** 2 + b * (1 - rho) ** 2
+		dU = lambda rho: (rho * ((1 - rho) ** 2 + a) - (1 - rho) * (rho ** 2 + b))
 
-		noise = np.random.normal(loc = 0.0, scale=self.diff_heat)/np.sqrt(h)
-		dRho = -L*dU( rho ) + noise
+		noise = np.random.normal(loc=0.0, scale=self.diff_heat) / np.sqrt(h)
+		dRho = -L * dU(rho) + noise
 
 		return dRho
 
-	def incentives_map( self, rho ):
+	def incentives_map(self, rho):
 		GREEN_STATE, RED_STATE = 0, 1
 
 		self.variables['mu_green'] = self.xi(rho, GREEN_STATE)
@@ -602,28 +682,28 @@ class HypothalamusController:
 
 		return self.variables['mu_green'], self.variables['mu_red']
 
-	def dmap( self, t, h, reward_g, reward_r ):
+	def dmap(self, t, h, reward_g, reward_r):
 		E1 = self.state[0]
 		E2 = self.state[1]
 		rho = self.state[2]
 
 		dE1, dE2 = self.drive_map(E1, E2, reward_g, reward_r)
-		dRho = self.motivation_map( h, rho )
-		mu_green, mu_red = self.incentives_map( rho )
+		dRho = self.motivation_map(h, rho)
+		mu_green, mu_red = self.incentives_map(rho)
 
 		return np.array([dE1, dE2, dRho]), mu_green, mu_red
 
-	def step( self, im, h, t, au ):
+	def step(self, im, h, t, au):
 		self.images = im
 		self.audio = au
 		# Step brain
-		# print "Reward r: ", self.reward_r, ", reward G: ", self.reward_g
-		di, xi_g, xi_r = self.dmap( t, h, int(self.reward_g), int(self.reward_r) )
+		# print("Reward r: ", self.reward_r, ", reward G: ", self.reward_g)
+		di, xi_g, xi_r = self.dmap(t, h, int(self.reward_g), int(self.reward_r))
 
 		# print "mu_r: ", xi_r, ", mu_g: ", xi_g
 
 		if self.state is not None and len(di) > 0:
-			self.state = self.state + h*di
+			self.state = self.state + h * di
 
 			# print "state: " ,self.state
 
@@ -632,72 +712,71 @@ class HypothalamusController:
 					self.state[i] = 0.0
 
 		# Iterate motivational systems
-		self.reward_r = self.mot_red.iterate( im, xi_r )
-		self.reward_g = self.mot_green.iterate( im, xi_g )
+		self.reward_r = self.mot_red.iterate(im, xi_r)
+		self.reward_g = self.mot_green.iterate(im, xi_g)
 		# self.reward_g = self.mot_audio.iterate(au, xi_g)
 		self.data['E1'].append(self.state[0])
 		self.data['E2'].append(self.state[1])
 		self.data['rho'].append(self.state[2])
 		self.data['xi_r'].append(xi_r)
 		self.data['xi_g'].append(xi_g)
-		self.data['vel_l'].append( self.actions.forces[0] )
-		self.data['vel_r'].append( self.actions.forces[1] )
-		self.data['reward_r'].append( self.reward_r )
-		self.data['reward_g'].append( self.reward_g )
+		self.data['vel_l'].append(self.actions.forces[0])
+		self.data['vel_r'].append(self.actions.forces[1])
+		self.data['reward_r'].append(self.reward_r)
+		self.data['reward_g'].append(self.reward_g)
 
-	def plots( self ):
+	def plots(self):
 		a = 0.9
 		s = 5.0
 		reward_r = np.array(self.data['reward_r'])
 		reward_g = np.array(self.data['reward_g'])
 		idx = np.arange(0, len(self.data['reward_r']))
 
-		
 		# Plotting drives
-		self.ax[0,0].plot( idx[reward_r == 1], 1.5*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
-		self.ax[0,0].plot( idx[reward_g == 1], 1.5*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
-		self.ax[0,0].plot( self.data['E1'], 'g', linewidth= 2.0, label = "E1" )
-		self.ax[0,0].plot( self.data['E2'], 'r', linewidth= 2.0, label = "E2" ) 
-		
-		self.ax[0,0].set_title('Internal state')
-		self.ax[0,0].set_ylabel('Energy')
+		self.ax[0, 0].plot(idx[reward_r == 1], 1.5 * reward_r[reward_r == 1], 'r.', markersize=s, alpha=a)
+		self.ax[0, 0].plot(idx[reward_g == 1], 1.5 * reward_g[reward_g == 1], 'g.', markersize=s, alpha=a)
+		self.ax[0, 0].plot(self.data['E1'], 'g', linewidth=2.0, label="E1")
+		self.ax[0, 0].plot(self.data['E2'], 'r', linewidth=2.0, label="E2")
+
+		self.ax[0, 0].set_title('Internal state')
+		self.ax[0, 0].set_ylabel('Energy')
 
 		# Protting tendencies
-		self.ax[0,1].plot( idx[reward_r == 1], 1.2*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
-		self.ax[0,1].plot( idx[reward_g == 1], 1.2*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
-		self.ax[0,1].plot( self.data['xi_g'], 'g', linewidth= 2.0, label = "xi_g" )
-		self.ax[0,1].plot( self.data['xi_r'], 'r', linewidth= 2.0, label = "xi_r" )
-		
-		self.ax[0,1].set_title('Tendencies')
-		self.ax[0,1].set_ylabel('xi')
+		self.ax[0, 1].plot(idx[reward_r == 1], 1.2 * reward_r[reward_r == 1], 'r.', markersize=s, alpha=a)
+		self.ax[0, 1].plot(idx[reward_g == 1], 1.2 * reward_g[reward_g == 1], 'g.', markersize=s, alpha=a)
+		self.ax[0, 1].plot(self.data['xi_g'], 'g', linewidth=2.0, label="xi_g")
+		self.ax[0, 1].plot(self.data['xi_r'], 'r', linewidth=2.0, label="xi_r")
+
+		self.ax[0, 1].set_title('Tendencies')
+		self.ax[0, 1].set_ylabel('xi')
 
 		# Plotting phi
-		self.ax[1,0].plot( idx[reward_r == 1], 1.2*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
-		self.ax[1,0].plot( idx[reward_g == 1], 1.2*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
-		self.ax[1,0].plot( self.data['rho'], 'k',  linewidth= 2.0 )		
-		self.ax[1,0].set_title('Motivational state')
-		self.ax[1,0].set_xlabel('Time step')
-		self.ax[1,0].set_ylabel('rho')
+		self.ax[1, 0].plot(idx[reward_r == 1], 1.2 * reward_r[reward_r == 1], 'r.', markersize=s, alpha=a)
+		self.ax[1, 0].plot(idx[reward_g == 1], 1.2 * reward_g[reward_g == 1], 'g.', markersize=s, alpha=a)
+		self.ax[1, 0].plot(self.data['rho'], 'k', linewidth=2.0)
+		self.ax[1, 0].set_title('Motivational state')
+		self.ax[1, 0].set_xlabel('Time step')
+		self.ax[1, 0].set_ylabel('rho')
 
 		# Plotting speed
-		self.ax[1,1].plot( idx[reward_r == 1], 1.2*reward_r[reward_r == 1], 'r.', markersize = s, alpha = a )
-		self.ax[1,1].plot( idx[reward_g == 1], 1.2*reward_g[reward_g == 1], 'g.', markersize = s, alpha = a )
-		self.ax[1,1].plot( self.data['vel_l'], 'k',  linewidth= 2.0, label = "left" )
-		self.ax[1,1].plot( self.data['vel_r'], 'b',  linewidth= 2.0, label = "right" )		
-		self.ax[1,1].legend( loc = 'upper right')
-		self.ax[1,1].set_title('Wheel speed')
-		self.ax[1,1].set_xlabel('Time step')
-		self.ax[1,1].set_ylabel('Speed')		
+		self.ax[1, 1].plot(idx[reward_r == 1], 1.2 * reward_r[reward_r == 1], 'r.', markersize=s, alpha=a)
+		self.ax[1, 1].plot(idx[reward_g == 1], 1.2 * reward_g[reward_g == 1], 'g.', markersize=s, alpha=a)
+		self.ax[1, 1].plot(self.data['vel_l'], 'k', linewidth=2.0, label="left")
+		self.ax[1, 1].plot(self.data['vel_r'], 'b', linewidth=2.0, label="right")
+		self.ax[1, 1].legend(loc='upper right')
+		self.ax[1, 1].set_title('Wheel speed')
+		self.ax[1, 1].set_xlabel('Time step')
+		self.ax[1, 1].set_ylabel('Speed')
 
 		# Plot in state space
-		E1_def = np.heaviside(1.0-np.array(self.data['E1']), 0)*(1.0-np.array(self.data['E1']))
-		E2_def = np.heaviside(1.0-np.array(self.data['E2']), 0)*(1.0-np.array(self.data['E2']))
-		self.ax2[0].plot( E1_def, E2_def, 'k', linewidth = 1.0 )
+		E1_def = np.heaviside(1.0 - np.array(self.data['E1']), 0) * (1.0 - np.array(self.data['E1']))
+		E2_def = np.heaviside(1.0 - np.array(self.data['E2']), 0) * (1.0 - np.array(self.data['E2']))
+		self.ax2[0].plot(E1_def, E2_def, 'k', linewidth=1.0)
 		sE1 = E1_def[0:-1:100]
 		sE2 = E2_def[0:-1:100]
-		self.ax2[0].plot( sE1, sE2, 'k.', markersize = 4 )
-		self.ax2[0].plot( E1_def[0], E2_def[0], 'k^' )
-		self.ax2[0].plot( E1_def[-1], E2_def[-1], 'ks' )
+		self.ax2[0].plot(sE1, sE2, 'k.', markersize=4)
+		self.ax2[0].plot(E1_def[0], E2_def[0], 'k^')
+		self.ax2[0].plot(E1_def[-1], E2_def[-1], 'ks')
 		self.ax2[0].grid()
 		self.ax2[0].set_title('Trajectory of deficits')
 		self.ax2[0].set_xlabel('Food deficit')
@@ -705,15 +784,15 @@ class HypothalamusController:
 		self.ax2[0].set_xlim((0, 1))
 		self.ax2[0].set_ylim((0, 1))
 
-		plot_boundaries( self.fig2, self.ax2[1] )
-		self.ax2[1].plot( self.data['a'], self.data['b'], 'k', linewidth = 0.5 )
-		self.ax2[1].plot( self.data['a'], self.data['b'], 'w', linewidth = 1.5 )
+		plot_boundaries(self.fig2, self.ax2[1])
+		self.ax2[1].plot(self.data['a'], self.data['b'], 'k', linewidth=0.5)
+		self.ax2[1].plot(self.data['a'], self.data['b'], 'w', linewidth=1.5)
 		sA = self.data['a'][0:-1:100]
 		sB = self.data['b'][0:-1:100]
-		self.ax2[1].plot( sA, sB, 'k.', markersize = 4.0 )
-		self.ax2[1].plot( self.data['a'][0], self.data['b'][0], 'k^' )
-		self.ax2[1].plot( self.data['a'][-1], self.data['b'][-1], 'ks' )
-		self.ax2[1].set_title( 'Motivational bifurcation' )
+		self.ax2[1].plot(sA, sB, 'k.', markersize=4.0)
+		self.ax2[1].plot(self.data['a'][0], self.data['b'][0], 'k^')
+		self.ax2[1].plot(self.data['a'][-1], self.data['b'][-1], 'ks')
+		self.ax2[1].set_title('Motivational bifurcation')
 		self.ax2[1].set_xlabel('a')
 		self.ax2[1].set_ylabel('b')
 		# Statistics
@@ -722,7 +801,4 @@ class HypothalamusController:
 		# 	np.save( f, E1_def )
 		# 	np.save( f, E2_def )
 
-
 		plt.show()
-
-		
