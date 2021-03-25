@@ -8,5 +8,5 @@ def plot_boundaries( fig, ax ):
     X = (A + B - 2)/2.0
     Y = (A - B)/2.0
     Z = -4*X**3 - 27*Y**2
-    s = ax.pcolormesh(A,B,Z, cmap='RdBu', vmin=-0.2, vmax=0.1)
+    s = ax.pcolormesh(A,B,Z, cmap='RdBu', vmin=-0.2, vmax=0.1, shading='auto')
     #fig.colorbar(s, shrink=0.5, aspect=10)

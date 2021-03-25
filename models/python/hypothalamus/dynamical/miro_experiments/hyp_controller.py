@@ -6,11 +6,15 @@ from sensors import *
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import entropy_percept as ep
 from plots_util import *
 from audio_perception import AudioPerception
 from interface.apriltag_perception import AprilTagPerception
 
+import time
+
+# mpl.use('TkAgg')
 
 class VisualPerception:
 
@@ -105,8 +109,9 @@ class VisualPerception:
 
 		return c_left, c_right
 
-	def getStimulusPositionAndSize(self, images, color):
-		c_left, c_right = self.locateCircle(images, color)
+	def getStimulusPositionAndSize(self, images, color, c_left=None, c_right=None):
+		if c_left is None and c_right is None:
+			c_left, c_right = self.locateCircle(images, color)
 		stim_x = None
 		stim_y = None
 		object_size = 0
@@ -133,6 +138,8 @@ class VisualPerception:
 			pr_r = gc(c_right[0])
 			object_size = c_right[2]
 			y_pos = c_right[1]
+
+		# c_right size always overrides c_left size?
 
 		if pl_l > pl_c:
 			stim_x = -1
@@ -410,7 +417,7 @@ class TagMotivationalSystem(MotivationalSystem):
 		self.stim_y = None
 		self.elapsed = 0
 
-		self.atp = AprilTagPerception(size=8.15)
+		self.atp = AprilTagPerception(size=8.2)
 
 		self.tag_id = tag_id
 		self.colour = colour
@@ -421,22 +428,18 @@ class TagMotivationalSystem(MotivationalSystem):
 		def tag_distance_and_location(tags, tag_id):
 			distance = [t.distance for t in tags if t.id == tag_id]
 			location = [t.centre for t in tags if t.id == tag_id]
+			apparent_size = [t.apparent_size for t in tags if t.id == tag_id]
 
 			if distance:
-				return distance[0], location[0]
+				return distance[0], location[0], apparent_size
 			else:
-				return None, None
+				return None, None, None
 
 		def annotate_image(image, tags, colour, tag_id):
 			[self.atp.draw_box(tag=t, image=image, colour=colour) for t in tags if t.id == tag_id]
 			[self.atp.draw_center(tag=t, image=image, colour='magenta') for t in tags if t.id == tag_id]
 
 		# Main
-		# if images is None:
-		# 	self.stim_x = None
-		# 	self.stim_y = None
-		# 	return
-
 		# FIXME: Do both eyes at once
 		caml = images[0]
 		camr = images[1]
@@ -446,18 +449,34 @@ class TagMotivationalSystem(MotivationalSystem):
 		distance_left = location_left = distance_right = location_right = self.distance = None
 
 		try:
-			[distance_left, location_left] = tag_distance_and_location(tags=tags_left, tag_id=self.tag_id)
-			annotate_image(image=caml, tags=tags_left, colour=self.colour, tag_id=self.tag_id)
+			[distance_left, location_left, apparent_size_left] = tag_distance_and_location(tags=tags_left, tag_id=self.tag_id)
+			# annotate_image(image=caml, tags=tags_left, colour=self.colour, tag_id=self.tag_id)
 		# If no left tags exist
 		except TypeError:
-			pass
+			distance_left = location_left = apparent_size_left = None
 
 		try:
-			[distance_right, location_right] = tag_distance_and_location(tags=tags_right, tag_id=self.tag_id)
-			annotate_image(image=camr, tags=tags_right, colour=self.colour, tag_id=self.tag_id)
+			[distance_right, location_right, apparent_size_right] = tag_distance_and_location(tags=tags_right, tag_id=self.tag_id)
+			# annotate_image(image=camr, tags=tags_right, colour=self.colour, tag_id=self.tag_id)
 		# If no right tags exist
 		except TypeError:
-			pass
+			distance_right = location_right = apparent_size_right = None
+
+		try:
+			c_left = list(location_left) + apparent_size_left
+		# If at least one attribute is missing
+		except TypeError:
+			c_left = None
+
+		try:
+			c_right = list(location_right) + apparent_size_right
+		except TypeError:
+			# If at least one attribute is missing
+			c_right = None
+
+		self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(
+			images, self.colour, c_left=c_left, c_right=c_right
+		)
 
 		# try:
 		# 	print('Distance (left) to tag {0} is {1:.2f}'.format(self.tag_id, distance_left))
@@ -465,51 +484,52 @@ class TagMotivationalSystem(MotivationalSystem):
 		# except UnboundLocalError:
 		# 	pass
 
-		# TODO: TIDY THIS UP
-		try:
-			# X value
-			if location_left[0] < caml.shape[1] / 2:
-				self.stim_x = -1
-				print('Tag left!')
-			else:
-				self.stim_x = 0
-
-			# Y value
-			if location_left[1] < caml.shape[0] / 2:
-				self.stim_y = -1
-			elif location_left[1] > caml.shape[0] / 2:
-				self.stim_y = 1
-			else:
-				self.stim_y = 0
-		# If no left tags exist
-		except (UnboundLocalError, TypeError):
-			pass
-
-		try:
-			# X value
-			if location_right[0] > camr.shape[1] / 2:
-				# Sanity check
-				if self.stim_x == -1:
-					raise Exception('Tag identified as both left and right')
-				else:
-					self.stim_x = 1
-					print('Tag right!')
-			else:
-				self.stim_x = 0
-
-			# Y value
-			if location_right[1] < camr.shape[0] / 2:
-				self.stim_y = -1
-			elif location_right[1] > camr.shape[0] / 2:
-				self.stim_y = 1
-			else:
-				self.stim_y = 0
-		# If no right tags exist
-		except (UnboundLocalError, TypeError):
-			self.stim_x = None
-			self.stim_y = None
+		# # TODO: TIDY THIS UP
+		# try:
+		# 	# X value
+		# 	if location_left[0] < caml.shape[1] / 2:
+		# 		self.stim_x = -1
+		# 		print('Tag left!')
+		# 	else:
+		# 		self.stim_x = 0
+		#
+		# 	# Y value
+		# 	if location_left[1] < caml.shape[0] / 2:
+		# 		self.stim_y = -1
+		# 	elif location_left[1] > caml.shape[0] / 2:
+		# 		self.stim_y = 1
+		# 	else:
+		# 		self.stim_y = 0
+		# # If no left tags exist
+		# except (UnboundLocalError, TypeError):
+		# 	pass
+		#
+		# try:
+		# 	# X value
+		# 	if location_right[0] > camr.shape[1] / 2:
+		# 		# Sanity check
+		# 		if self.stim_x == -1:
+		# 			raise Exception('Tag identified as both left and right')
+		# 		else:
+		# 			self.stim_x = 1
+		# 			print('Tag right!')
+		# 	else:
+		# 		self.stim_x = 0
+		#
+		# 	# Y value
+		# 	if location_right[1] < camr.shape[0] / 2:
+		# 		self.stim_y = -1
+		# 	elif location_right[1] > camr.shape[0] / 2:
+		# 		self.stim_y = 1
+		# 	else:
+		# 		self.stim_y = 0
+		# # If no right tags exist
+		# except (UnboundLocalError, TypeError):
+		# 	self.stim_x = None
+		# 	self.stim_y = None
 
 		# Get distance
+		# TODO: Tidy this, is a mess
 		try:
 			self.distance = np.min([distance_left, distance_right])
 		# If either value doesn't exist
@@ -524,7 +544,7 @@ class TagMotivationalSystem(MotivationalSystem):
 					pass
 
 		try:
-			print('Distance to tag {}: {:.1f}cm'.format(self.tag_id, self.distance))
+			print('Distance to {}: {:.1f}cm'.format(self.colour, self.distance))
 		except TypeError:
 			pass
 
@@ -581,6 +601,8 @@ class TagMotivationalSystem(MotivationalSystem):
 
 class HypothalamusController:
 	def __init__(self, robot):
+
+
 		self.s0 = np.array([0.1, 0.15, 0.0])
 		self.state = self.s0
 		self.robot = robot
@@ -697,6 +719,10 @@ class HypothalamusController:
 		self.images = im
 		self.audio = au
 		# Step brain
+		if self.reward_r:
+			print("RED reward")
+		if self.reward_g:
+			print("GREEN reward")
 		# print("Reward r: ", self.reward_r, ", reward G: ", self.reward_g)
 		di, xi_g, xi_r = self.dmap(t, h, int(self.reward_g), int(self.reward_r))
 
@@ -705,7 +731,9 @@ class HypothalamusController:
 		if self.state is not None and len(di) > 0:
 			self.state = self.state + h * di
 
-			# print "state: " ,self.state
+			# print("E1: {e1:.4f}   E2: {e2:.4f}   ρ: {rho:.4f}".format(
+			# 	e1=self.state[0], e2=self.state[1], rho=self.state[2]
+			# ))
 
 			for i in range(len(self.state)):
 				if self.state[i] <= 0:
@@ -801,4 +829,7 @@ class HypothalamusController:
 		# 	np.save( f, E1_def )
 		# 	np.save( f, E2_def )
 
-		plt.show()
+		# plt.draw()
+		self.fig.show()
+		self.fig2.show()
+		# plt.show()

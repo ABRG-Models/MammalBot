@@ -35,13 +35,13 @@ class MiroController:
 
 	def __init__( self ):
 		# Set robot name
-		# topic_root = "/" + os.getenv("MIRO_ROBOT_NAME")
+		topic_root = "/" + os.getenv("MIRO_ROBOT_NAME")
 		# rospy.init_node("sign_stimuli", anonymous=True)
 		# Define ROS publishers
 		# self.pub_cmd_vel = rospy.Publisher(topic_root + "/control/cmd_vel", TwistStamped, queue_size=0)
-		# self.pub_cos = rospy.Publisher(topic_root + "/control/cosmetic_joints", Float32MultiArray, queue_size=0)
+		self.pub_cos = rospy.Publisher(topic_root + "/control/cosmetic_joints", Float32MultiArray, queue_size=0)
 		# self.pub_illum = rospy.Publisher(topic_root + "/control/illum", UInt32MultiArray, queue_size=0)
-		# self.pub_kin = rospy.Publisher(topic_root + "/control/kinematic_joints", JointState, queue_size=0)
+		self.pub_kin = rospy.Publisher(topic_root + "/control/kinematic_joints", JointState, queue_size=0)
 		#
 		# # Subscribers
 		# #rospy.Subscriber(topic_root + '/sensors/package', miro.msg.sensors_package, self.touchListener)
@@ -53,11 +53,11 @@ class MiroController:
 
 		# # Initializing object for data publishing
 		# self.velocity = TwistStamped()
-		# self.cos_joints = Float32MultiArray()
-		# self.cos_joints.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-		# self.kin_joints = JointState()
-		# self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
-		# self.kin_joints.position = [0.0, math.radians(34.0), 0.0, 0.0]
+		self.cos_joints = Float32MultiArray()
+		self.cos_joints.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.kin_joints = JointState()
+		self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
+		self.kin_joints.position = [0.0, math.radians(34.0), 0.0, 0.0]
 		# self.illum = UInt32MultiArray()
 		# self.illum.data = [0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF]
 
@@ -78,12 +78,12 @@ class MiroController:
 		self.move([0,0])
 
 	def moveHead( self, y ):
-		# self.kin_joints.position[lift] = math.radians(self.LiftControl.get_value())
-		# self.kin_joints.position[pitch] = math.radians(self.PitchControl.get_value())
-		# self.kin_joints.position[lift] = math.radians(y)
-		# self.pub_kin.publish( self.kin_joints )
+		self.kin_joints.position[lift] = math.radians(self.LiftControl.get_value())
+		self.kin_joints.position[pitch] = math.radians(self.PitchControl.get_value())
+		self.kin_joints.position[lift] = math.radians(y)
+		self.pub_kin.publish( self.kin_joints )
 
-		miro_pub.pub_kinematic_joints(lift=y)
+		# miro_pub.pub_kinematic_joints(lift=y)
 
 	@staticmethod
 	def shine( color, idxs = range(6), off = False ):
@@ -97,31 +97,31 @@ class MiroController:
 		# self.pub_illum.publish(self.illum)
 
 		miro_pub.pub_illum(all=color)
-		miro_pub.ros_sleep(0.5)
+		# miro_pub.ros_sleep(0.05)
 
 
 	def tailWag( self ):
-		# MAX_TIME = 10
-		# t = self.wag_t
-		# A = 1.0
-		# w = 2*np.pi*0.2
-		# f = lambda t: A*np.cos(w*t)
-		#
-		# if t > MAX_TIME:
-		# 	self.cos_joints.data[wag] = 0.5
-		# 	r = False
-		# 	self.wag_t = 0
-		# else:
-		# 	self.cos_joints.data[wag] = f(t)
-		# 	r = True
-		#
-		# self.cos_joints.data[droop] = 0.0
-		# self.pub_cos.publish(self.cos_joints)
-		# self.wag_t += 0.2
+		MAX_TIME = 10
+		t = self.wag_t
+		A = 1.0
+		w = 2*np.pi*0.2
+		f = lambda t: A*np.cos(w*t)
 
-		# miro_act.wag(wags=1)
-		miro_pub.pub_illum(all='blue')
-		print('wag')
+		if t > MAX_TIME:
+			self.cos_joints.data[wag] = 0.5
+			r = False
+			self.wag_t = 0
+		else:
+			self.cos_joints.data[wag] = f(t)
+			r = True
+
+		self.cos_joints.data[droop] = 0.0
+		self.pub_cos.publish(self.cos_joints)
+		self.wag_t += 0.2
+
+		# # miro_act.wag(wags=1)
+		# miro_pub.pub_illum(all='blue')
+		# print('wag')
 
 
 	# def callback_cam(self, ros_image, camera = LEFT):
@@ -153,13 +153,12 @@ class MiroController:
 
 		while not rospy.core.is_shutdown() and self.running:
 			# if self.image[0] is not None and self.image[1] is not None:
+
+			step_start = time.time()
+
 			self.image = [miro_per.caml_undistorted, miro_per.camr_undistorted]
 
 			self.controller.step(self.image, h, t, self.audio)
-
-			# cv2.imshow('LEFT', self.image[0])
-			# cv2.imshow('RIGHT', self.image[1])
-			# cv2.waitKey(5)
 
 			self.image = [None, None]
 
@@ -168,12 +167,16 @@ class MiroController:
 			plt.pause(0.01)
 			t += h
 
-			# print("Time: {:.2f}".format(t))
+			# print("Step duration: {}".format(time.time() - step_start))
+
+			_, r = divmod(t, 1)
+			if math.isclose(r, 0, abs_tol=0.01):
+				print("Time: {:.0f}".format(t))
 
 			if t > 40.0:
 				self.running = False
 
-		# self.controller.plots()
+		self.controller.plots()
 
 
 if __name__ == "__main__":
