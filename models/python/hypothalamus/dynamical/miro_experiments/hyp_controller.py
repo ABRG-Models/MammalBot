@@ -110,8 +110,11 @@ class VisualPerception:
 		return c_left, c_right
 
 	def getStimulusPositionAndSize(self, images, color, c_left=None, c_right=None):
-		if c_left is None and c_right is None:
-			c_left, c_right = self.locateCircle(images, color)
+		# if color == 'red':
+		# 	print('debug here')
+
+		# if c_left is None and c_right is None:
+		# 	c_left, c_right = self.locateCircle(images, color)
 		stim_x = None
 		stim_y = None
 		object_size = 0
@@ -183,7 +186,9 @@ class ActionSystem:
 		if location == -1:
 			forces[1] = v * xi
 		elif location == 1:
+			# MODIFIED THIS to account for constant left turns
 			forces[0] = v * xi
+			# forces[0] = v * xi * 2
 		elif location == 0:
 			forces = [v * xi, v * xi]
 
@@ -207,14 +212,25 @@ class ActionSystem:
 
 		self.robot.moveHead(self.angle)
 
-	def search(self, dir):
-		v = dir * 0.1
-		self.forces = [0, v]
+	def search(self, direction):
+		velocity = direction * 0.1
+		self.forces = [0, velocity]
+		self.robot.move(self.forces)
+
+	def search_new(self, direction=None):
+		if direction in ('Left', 'left', 'l'):
+			self.forces = [0, 1]
+		elif direction in ('Right', 'right', 'r'):
+			self.forces = [1, 0]
+		else:
+			print('No search direction specified')
+			self.forces = [0, 0]
+
 		self.robot.move(self.forces)
 
 	def backtrack(self):
-		v = -0.2
-		forces = [v, v]
+		velocity = -0.2
+		forces = [velocity, velocity]
 		self.robot.move(forces)
 
 	def shine(self, color, xi):
@@ -474,77 +490,28 @@ class TagMotivationalSystem(MotivationalSystem):
 			# If at least one attribute is missing
 			c_right = None
 
+		# if self.colour == 'red':
+		# 	print('debug here')
+
 		self.stim_x, self.stim_y, self.object_size = self.perception.getStimulusPositionAndSize(
 			images, self.colour, c_left=c_left, c_right=c_right
 		)
 
-		# try:
-		# 	print('Distance (left) to tag {0} is {1:.2f}'.format(self.tag_id, distance_left))
-		# 	print('Centre (left) of tag {0} is {1}'.format(self.tag_id, location_left[0]))
-		# except UnboundLocalError:
-		# 	pass
-
-		# # TODO: TIDY THIS UP
-		# try:
-		# 	# X value
-		# 	if location_left[0] < caml.shape[1] / 2:
-		# 		self.stim_x = -1
-		# 		print('Tag left!')
-		# 	else:
-		# 		self.stim_x = 0
-		#
-		# 	# Y value
-		# 	if location_left[1] < caml.shape[0] / 2:
-		# 		self.stim_y = -1
-		# 	elif location_left[1] > caml.shape[0] / 2:
-		# 		self.stim_y = 1
-		# 	else:
-		# 		self.stim_y = 0
-		# # If no left tags exist
-		# except (UnboundLocalError, TypeError):
-		# 	pass
-		#
-		# try:
-		# 	# X value
-		# 	if location_right[0] > camr.shape[1] / 2:
-		# 		# Sanity check
-		# 		if self.stim_x == -1:
-		# 			raise Exception('Tag identified as both left and right')
-		# 		else:
-		# 			self.stim_x = 1
-		# 			print('Tag right!')
-		# 	else:
-		# 		self.stim_x = 0
-		#
-		# 	# Y value
-		# 	if location_right[1] < camr.shape[0] / 2:
-		# 		self.stim_y = -1
-		# 	elif location_right[1] > camr.shape[0] / 2:
-		# 		self.stim_y = 1
-		# 	else:
-		# 		self.stim_y = 0
-		# # If no right tags exist
-		# except (UnboundLocalError, TypeError):
-		# 	self.stim_x = None
-		# 	self.stim_y = None
+		# if self.colour == 'green':
+		# 	print('debug here')
 
 		# Get distance
 		# TODO: Tidy this, is a mess
-		try:
+		if distance_left is not None and distance_right is not None:
 			self.distance = np.min([distance_left, distance_right])
-		# If either value doesn't exist
-		except (UnboundLocalError, TypeError):
-			try:
-				self.distance = distance_left
-			except (UnboundLocalError, TypeError):
-				try:
-					self.distance = distance_right
-				except (UnboundLocalError, TypeError):
-					# print('no distance values')
-					pass
+		elif distance_left is not None:
+			self.distance = distance_left
+		elif distance_right is not None:
+			self.distance = distance_right
 
 		try:
 			print('Distance to {}: {:.1f}cm'.format(self.colour, self.distance))
+			# print('debug here')
 		except TypeError:
 			pass
 
@@ -553,10 +520,11 @@ class TagMotivationalSystem(MotivationalSystem):
 		self.express(xi)
 		self.behave(xi)
 
+
 		# r = self.perception.isClose(images, self.object_size)
 
 		try:
-			if self.distance < 40 and xi > 0.5:
+			if self.distance < 30 and xi > 0.5:
 				self.actions.stop()
 				self.s = 2
 				self.object_size = 0
@@ -579,24 +547,41 @@ class TagMotivationalSystem(MotivationalSystem):
 			self.actions.wag()
 
 	def behave(self, xi):
+		print('BEHAVE   {}'.format(self.colour))
+		if self.distance is not None:
+			print('Distance:    {}'.format(self.distance))
+		print('stim_x:  {}'.format(self.stim_x))
+		print('s:       {}'.format(self.s))
+		print('xi:      {}'.format(xi))
+
+		# if self.colour == 'red' and self.stim_x is not None:
+		# 	print('debug here')
+
 		if self.stim_x is None and self.s != 0:
+			print('Elapsed: {}'.format(self.elapsed))
 			self.elapsed += 1
 
 			if self.elapsed > 20:
+				print('Setting s to 0')
 				self.s = 0
 				self.elapsed = 0
 
 		elif self.stim_x is not None and self.s == 0:
+			print('➤ STOP')
 			self.s = 1
 			self.elapsed = 0
 			self.actions.stop()
 
 		if self.s == 0:
 			if xi > 0.5:
-				self.actions.search(1)
+				print('➤ SEARCH')
+				self.actions.search_new(direction='right')
 		elif self.s == 1:
+			print('➤ FOLLOW')
 			self.actions.follow(self.stim_x, xi)
 			self.s = 1
+
+		print('')
 
 
 class HypothalamusController:
@@ -723,6 +708,7 @@ class HypothalamusController:
 			print("RED reward")
 		if self.reward_g:
 			print("GREEN reward")
+		# print("ρ is {}".format(self.state[2]))
 		# print("Reward r: ", self.reward_r, ", reward G: ", self.reward_g)
 		di, xi_g, xi_r = self.dmap(t, h, int(self.reward_g), int(self.reward_r))
 

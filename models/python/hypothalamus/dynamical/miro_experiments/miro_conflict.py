@@ -72,6 +72,7 @@ class MiroController:
 	@staticmethod
 	def move(forces):
 		miro_pub.pub_cmd_vel_ms(left=forces[0], right=forces[1])
+		miro_pub.ros_sleep(0.5)
 
 	def stop( self ):
 		self.v = [0, 0]
@@ -150,6 +151,8 @@ class MiroController:
 	def run(self):
 		h = 0.01
 		t = 0.0
+		# miro_pub.pub_kinematic_joints()
+		# miro_pub.pub_cosmetic_joints(eyes='open')
 
 		while not rospy.core.is_shutdown() and self.running:
 			# if self.image[0] is not None and self.image[1] is not None:
