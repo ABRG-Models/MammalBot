@@ -21,5 +21,8 @@ experiment = sm.Experiment( model, world, h )
 
 
 x0 = [0.05, 0.17, 0.3]
-T = 400000
-t, X = experiment.run( x0, T )
+T = 100000
+t, X, pos = experiment.run( x0, T )
+
+plt.plot(t, pos)
+plt.show()

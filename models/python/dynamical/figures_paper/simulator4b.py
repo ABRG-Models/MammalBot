@@ -42,59 +42,128 @@ class Experiment:
         self.model = model
         self.world = world
         self.h = h
-        self.interruptions = []
 
         # Motivational kernels
-        self.eta1 = lambda x: np.heaviside( -x, 0.0)
-        self.eta2 = lambda x: np.heaviside(x, 0.0)
+        self.eta1 = lambda x: np.heaviside( -x, 0.0 )
+        self.eta2 = lambda x: np.heaviside( x, 0.0 )
         
 
     def run(self, x0, T = 1000):
         self.X = np.zeros((len(x0), T))
         self.X[:,0] = x0
         self.time = np.zeros(T)
-        K = 0.1
-        flag = False
-        int_time = -1
-        duration = 105
+        
+        self.pos = np.zeros(T)
 
         for i in range(T-1):
-            
-
             input1, input2 = self.world.step(self.time[i], 
                                              self.eta1(self.X[2,i]), 
                                              self.eta2(self.X[2,i]))
             
             self.X[:, i+1] = self.model.step(self.time[i], self.X[:,i], input1, input2)
             self.time[i+1] = self.time[i] + self.h
+            self.pos[i+1] = self.world.x
             
-            
-        return self.time, self.X
+        return self.time, self.X, self.pos
         
+class HungerMotivation:
+    def __init__(self, world):
+        self.world = world
+        self.state = self.search
 
+    def consume( self, t, eta ):
+        if eta > 0.5:
+            return 10
+        else:
+            self.state = self.search
+            return 0
+        
+    def pursue( self, t, eta ):
+        g = self.world.gradientFood()
+        self.world.move( -eta*g )
+
+        if self.world.reachedFood():
+            self.state = self.consume
+        
+        return 0
+    
+    def search( self, t, eta ):
+        g = self.world.gradientFood()
+
+        if g < 0.01:
+            self.world.move( -eta*np.random.randn() )
+        else:
+            self.state = self.pursue
+        
+        return 0
+
+    def step( self, t, eta ):
+        return self.state(t, eta)
+
+
+class TemperatureMotivation:
+    def __init__(self, world):
+        self.world = world
+        self.state = self.search
+
+    def consume( self, t, eta ):
+        if eta < 0.5:
+            self.state = self.search
+        return self.world.temperature()
+        
+    def pursue( self, t, eta ):
+        g = self.world.gradientTemperature()
+        self.world.move( -eta*g )
+
+        if self.world.reachedSweetSpot():
+            self.state = self.consume
+        
+        return self.world.temperature()
+    
+    def search( self, t, eta ):
+        g = self.world.gradientTemperature()
+
+        if g < 0.01:
+            self.world.move( -eta*np.random.randn() )
+        else:
+            self.state = self.pursue
+        
+        return self.world.temperature()
+
+    def step( self, t, eta ):
+        return self.state(t, eta)
 
 class World:
     def __init__( self, h):
         self.h = h
-        self.t0 = 0
-        
+        self.hungerMotivation = HungerMotivation(self)
+        self.temperatureMotivation = TemperatureMotivation(self)
+        self.foodSignal = lambda x: np.exp(-(x + 1.0)**2)
+        self.tSignal = lambda x: 10*x
+        self.x = 0.0
 
-    def consume( self, t, eta1, eta2 ):
-        NOP
-        
-    def pursue( self, t, eta1, eta2 ):
-        NOP
+    def gradientFood( self ):
+        return -2.0*(self.x + 1.0)*np.exp(-(self.x + 1.0)**2.0)
+
+    def gradientTemperature( self ):
+        return 10
     
-    def search( self, t, eta1, eta2 ):
-        NOP
+    def temperature( self ):
+        return self.tSignal(self.x)
+
+    def reachedFood( self ):
+        return np.abs(self.x + 1.0) < 0.01
+
+    def reachedSweetSpot( self ):
+        return np.abs(self.x - 1.0) < 0.01
+
+    def move( self, g ):
+        self.x += 0.01*g
 
     def step(self, t, eta1, eta2):
 
-
-        input1, input2 = self.consume(t, eta1, eta2)
-
-        
-
-       
+        input1 = self.hungerMotivation.step(t, eta1)
+        input2 = self.temperatureMotivation.step(t, eta2)
+      
         return input1, input2
 
