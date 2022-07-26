@@ -24,14 +24,14 @@ def plot_fold(ax):
                        linewidth=0, antialiased=True, vmin=-1, vmax = 1)
     # ax.contour(U, V, Z, [0], linewidths = [2.0], colors = ['k'])
 
-def plot_fold_projection( ax ):
+def plot_fold_projection( ax, color = 'k' ):
     U = np.arange(0, 1, 0.01)
     V = np.arange(0, 1, 0.01)
     U, V = np.meshgrid(U, V)
     X = U + V
     Y = U - V
     Z = 2.0*X**3 - 27.0*Y**2
-    ax.contour(U, V, Z, [ 0], linewidths = [2.0, 2.0], colors = ['k'])
+    ax.contour(U, V, Z, [ 0], linewidths = [2.0, 2.0], colors = [color])
 
 def plot_fold_projection_rotated( ax ):
     X = np.arange(0, 2, 0.01)
