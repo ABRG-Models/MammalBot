@@ -1,37 +1,62 @@
 # Dominance - dominance boundary
+from nose import run
 import numpy as np
 import matplotlib.pyplot as plt
-from models import *
-from fold2m import *
+import simulator4a as sm
+from sklearn.linear_model import Perceptron
 
-# Plotting the fold
-a = 2.0
-b = 50.0
-sigma = 10.0
 
-# Integrating model
-model = TwoMotivations()
-model.b1 = model.b2 = b
-model.a1 = model.a2 = a
-model.sigma = sigma
+h = 0.005
+model = sm.Model(h)
+# Parameters
+# The values are choosen so that the agent is in deficit
+model.a1 = 1.0
+model.a2 = 1.0
+model.b1 = 18.0
+model.b2 = 18.0
+model.sigma = 8.0
+model.epsilon = 0.005   
 
-t_interrupt = 200
+world = sm.World(h)
+experiment = sm.Experiment( model, world, h )
 
-def Fi(t):
-    if( t > t_interrupt and t < t_interrupt+10 ):
-        return -1
-    return 0.0
+def plot_fold_projection( ax, color = 'k', offset = 0 ):
+    U = np.arange(0, 1, 0.01)
+    V = np.arange(0, 1, 0.01)
+    U, V = np.meshgrid(U, V)
+    X = U + V
+    Y = U - V
+    Z = 2.0*X**3 - 27.0*Y**2 - offset
+    ax.contour(1-U, 1-V, Z, [0], linewidths = [2.0, 2.0], colors = [color])
 
-u0 = 0.2
-v0 = 0.1
-t,X = model.integrate(T = 50000, q0 = [u0, v0, -1.0], input_u = Fi)
-  
-fig, ax = plt.subplots(1,1)
 
-plot_fold_projection( ax )
+x0 = [0.05, 0.17, 0.3]
+T = 400000
+t, X = experiment.run( x0, T )
 
-plt.plot(X[0,:], X[1,:], 'b', linewidth = 2.0)
+fig, ax = plt.subplots(1, 1)
 
-plt.figure()
-plt.plot(1-X[0, :], 1- X[1, :])
+plot_fold_projection( ax, color =(0.7, 0.7, 0.7))
+plot_fold_projection( ax, color =(0.7, 0.7, 0.9), offset = -0.1)
+plot_fold_projection( ax, color =(0.7, 0.7, 0.9), offset = 0.1)
+
+
+ax.plot(1-X[0,:], 1-X[1,:], color = [0.8, 0.8, 0.8])
+ax.plot(1-X[0,experiment.interruptions], 1-X[1,experiment.interruptions], 'k', linewidth = 2.0)
+ax.plot(1-X[0,0], 1-X[1,0], 'k.', markersize = 15.0)
+for i in range(len(experiment.interruptions)-1):
+    if X[2, experiment.interruptions[i]]*X[2, experiment.interruptions[i+1]] > 0:
+        if X[2, experiment.interruptions[i]] > 0:
+            ax.plot(1 - X[0, experiment.interruptions[i]], 1 - X[1, experiment.interruptions[i]], 'k.', markersize = 13.0)
+        else:
+            ax.plot(1 - X[0, experiment.interruptions[i]], 1 - X[1, experiment.interruptions[i]], 'r.', markersize = 13.0)
+    else:
+        if X[2, experiment.interruptions[i]] > 0:
+            ax.plot(1 - X[0, experiment.interruptions[i]], 1 - X[1, experiment.interruptions[i]], 'k^', markersize = 15.0)
+        else:
+            ax.plot(1 - X[0, experiment.interruptions[i]], 1 - X[1, experiment.interruptions[i]], 'r^', markersize = 15.0)
+# ax.plot(t, X[2,:])
+ax.set_xlabel('Deficit u', fontsize = 16.0)
+ax.set_ylabel('Deficit v', fontsize = 16.0)
+plt.xticks(fontsize = 14.0)
 plt.show()

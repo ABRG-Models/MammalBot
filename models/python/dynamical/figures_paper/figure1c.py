@@ -5,7 +5,7 @@ from models import *
 from fold2m import *
 
 a = 2.0
-b = 65.0
+b = 35.0
 sigma = 10.0
 
 u0 = 1.0
@@ -47,6 +47,7 @@ fig, ax = plt.subplots(1, 1)
 plot_fold_projection_rotated( ax )
 ax.plot(Xr[0,0:15500],Xr[1,0:15500], 'b', linewidth = 2.0)
 ax.plot(Xr[0,15500:-1],Xr[1,15500:-1], 'r', linewidth = 2.0)
+ax.plot([0, 2], [0, 0], 'k--', linewidth = 2.0)
 us = np.linspace(0, 1, 10)
 
 for i in range(len(k)):

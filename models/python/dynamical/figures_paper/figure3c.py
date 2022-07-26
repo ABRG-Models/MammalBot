@@ -4,7 +4,7 @@ from scipy.optimize import fmin, fsolve
 from models import *
 from fold2m import *
 a1 = 2.0
-a2 = 4.0
+a2 = 2.5
 b = 75.5
 sigma = 10.0
 
@@ -17,7 +17,7 @@ model.epsilon = 0.01
 
 u0 = 1.0
 v0 = 1.0
-t,X = model.integrate(T = 50000, q0 = [u0, v0, 1.0])
+t,X = model.integrate(T = 50000, q0 = [u0, v0, -1.0])
 
 g1 = lambda u, v, rho: -a1*u + b*(1 - u)*np.exp(-sigma*(rho + 1.0)**2)
 g2 = lambda u, v, rho: -a2*v + b*(1 - v)*np.exp(-sigma*(rho - 1.0)**2)
