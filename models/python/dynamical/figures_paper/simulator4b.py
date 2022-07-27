@@ -18,7 +18,7 @@ class Model:
     def map( self, t, x, input_u = 0, input_v = 0): 
             
         g1 = lambda q1, q2, rho: -self.a1*q1 + self.b1*(1.0 - q1)*np.exp(-self.sigma*(rho - self.rho1)**2)*(1.0 + input_u) 
-        g2 = lambda q1, q2, rho: -self.a2*q2 + self.b2*(1.0 - q2)*np.exp(-self.sigma*(rho - self.rho2)**2)*(1.0 + input_v) 
+        g2 = lambda q1, q2, rho: -self.a2*(q2 - input_v) + self.b2*(1.0 - q2)*np.exp(-self.sigma*(rho - self.rho2)**2)*(1.0 + np.abs(input_v)) 
         f = lambda q1, q2, rho: -4.0*((rho - self.rho1)*(rho - self.rho2)*(rho - (self.rho1+self.rho2)/2.0) + 
                                     (1-q1)*(rho - self.rho1)/2.0 + (1-q2)*(rho - self.rho2)/2.0)
 
@@ -59,7 +59,10 @@ class Experiment:
             input1, input2 = self.world.step(self.time[i], 
                                              self.eta1(self.X[2,i]), 
                                              self.eta2(self.X[2,i]))
-            
+            # input1, input2 = self.world.step(self.time[i], 
+            #                                  1.0, 
+            #                                  0.0)
+            print("input1: %.1f, input2: %.1f"%(input1, input2))
             self.X[:, i+1] = self.model.step(self.time[i], self.X[:,i], input1, input2)
             self.time[i+1] = self.time[i] + self.h
             self.pos[i+1] = self.world.x
@@ -91,7 +94,7 @@ class HungerMotivation:
         g = self.world.gradientFood()
 
         if g < 0.01:
-            self.world.move( -eta*np.random.randn() )
+            self.world.move( -eta*np.random.rand() )
         else:
             self.state = self.pursue
         
@@ -113,7 +116,7 @@ class TemperatureMotivation:
         
     def pursue( self, t, eta ):
         g = self.world.gradientTemperature()
-        self.world.move( -eta*g )
+        self.world.move( eta*g )
 
         if self.world.reachedSweetSpot():
             self.state = self.consume
@@ -136,29 +139,31 @@ class TemperatureMotivation:
 class World:
     def __init__( self, h):
         self.h = h
+        self.tmin = -2.0
         self.hungerMotivation = HungerMotivation(self)
         self.temperatureMotivation = TemperatureMotivation(self)
         self.foodSignal = lambda x: np.exp(-(x + 1.0)**2)
-        self.tSignal = lambda x: 10*x
+        self.tSignal = lambda x: -self.tmin*x/2.0 + self.tmin/2.0
         self.x = 0.0
 
     def gradientFood( self ):
         return -2.0*(self.x + 1.0)*np.exp(-(self.x + 1.0)**2.0)
 
     def gradientTemperature( self ):
-        return 10
+        return 5.0
     
     def temperature( self ):
         return self.tSignal(self.x)
 
     def reachedFood( self ):
-        return np.abs(self.x + 1.0) < 0.01
+        return np.abs(self.x + 1.0) < 0.1
 
     def reachedSweetSpot( self ):
-        return np.abs(self.x - 1.0) < 0.01
+        return np.abs(self.x - 1.0) < 0.1
 
     def move( self, g ):
-        self.x += 0.01*g
+        if np.abs(self.x) < 1.2:
+            self.x += 0.01*g
 
     def step(self, t, eta1, eta2):
 
