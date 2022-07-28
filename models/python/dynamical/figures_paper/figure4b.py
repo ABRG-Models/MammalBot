@@ -21,7 +21,7 @@ experiment = sm.Experiment( model, world, h )
 
 
 x0 = [0.05, 0.17, 0.3]
-T = 50000
+T = 200000
 experiment.world.tmin = -10.0
 t, X1, pos1 = experiment.run( x0, T )
 
@@ -51,8 +51,13 @@ ax4.plot(t, pos2)
 ax4.plot([0, t[-1]], [1, 1], 'k--')
 ax4.plot([0, t[-1]], [-1, -1], 'k--')
 ax4.axis([0, t[-1], -1.2, 1.2])
+ax4.set_xlabel('time (a.u)')
+ax1.set_ylabel('x')
+ax3.set_ylabel('x')
 
 fig2 = plt.figure()
-plt.hist(pos1)
-plt.hist(pos2)
+plt.hist([pos1, pos2], bins = 2, density = True, label = ["-10C", "-2C"])
+plt.xticks([-0.75, 0.75], labels = ['food', 'heat'])
+plt.xlabel('x')
+plt.legend()
 plt.show()
