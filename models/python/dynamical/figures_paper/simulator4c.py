@@ -44,8 +44,10 @@ class Experiment:
         self.h = h
 
         # Motivational kernels
-        self.eta1 = lambda x: np.heaviside( -x, 0.0 )
-        self.eta2 = lambda x: np.heaviside( x, 0.0 )
+        # self.eta1 = lambda x: np.heaviside( -x, 0.0 )
+        # self.eta2 = lambda x: np.heaviside( x, 0.0 )
+        self.eta1 = lambda x: np.exp( -2.0*(x + 1 )**2 )
+        self.eta2 = lambda x: np.exp( -2.0*(x - 1 )**2 )
         
 
     def run(self, x0, T = 1000):
